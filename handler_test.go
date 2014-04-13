@@ -1,12 +1,12 @@
 package pastis
 
 import (
+	"bytes"
+	"log"
 	"net/http"
 	"net/http/httptest"
-	"log"
-	//"fmt"
-	"io/ioutil"
 	"encoding/json"
+	"io/ioutil"
 	"net/url"
 	"reflect"
 	"testing"
@@ -25,6 +25,21 @@ func refute(t *testing.T, a interface{}, b interface{}) {
 	}
 }
 
+func assert_HTTP_Response(t *testing.T, res *http.Response, expectedStatusCode int, expectedResponsebody interface{}) {
+	expect(t, res.StatusCode, expectedStatusCode)
+	var body []byte
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var f Foo
+	err = json.Unmarshal(body, &f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	expect(t, f, expectedResponsebody)
+}
+
 func Test_NewAPI(t *testing.T) {
 	m := NewAPI()
 	if m == nil {
@@ -41,38 +56,86 @@ type FooResource struct {
 }
 
 type Foo struct {
-		Name  string
-		Order int
+	Name  string
+	Order int
 }
 
 func (api FooResource) GET(vals url.Values) (int, interface{}) {
-	return http.StatusOK, Foo {"name", 1}
+	return http.StatusOK, Foo{"name", 1}
 }
 
-func Test_Pastis_Handler(t *testing.T) {
+func Test_Pastis_Resource_Handler(t *testing.T) {
 	resource := new(FooResource)
 	p := NewAPI()
 	p.AddResource(resource, "/foo")
-	
+
 	ts := httptest.NewServer(p)
 	defer ts.Close()
 
-	url:= ts.URL + "/foo"
+	url := ts.URL + "/foo"
 	res, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var body []byte
-	body, err = ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Fatal(err)
-	} 
-	var f Foo
-	err = json.Unmarshal(body, &f)
+	assert_HTTP_Response(t, res, http.StatusOK, Foo{"name", 1})
+}
+
+func Test_Pastis_Action_Handler(t *testing.T) {
+	p := NewAPI()
+	p.Do("GET", func(vals url.Values) (int, interface{}) {
+		return http.StatusOK, Foo{"name", 1}
+	}, "/foo")
+
+	ts := httptest.NewServer(p)
+	defer ts.Close()
+
+	url := ts.URL + "/foo"
+	res, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
 	}
-	expect(t, res.StatusCode, http.StatusOK)
-	expect(t, f,  Foo {"name", 1})
+	assert_HTTP_Response(t, res, http.StatusOK, Foo{"name", 1})
+}
+
+func Test_Pastis_Action_Having_Input_Handler(t *testing.T) {
+	p := NewAPI()
+	p.Do("POST", func(vals url.Values, input Foo) (int, interface{}) {
+		return http.StatusOK, input
+	}, "/foo")
+
+	ts := httptest.NewServer(p)
+	defer ts.Close()
+
+	foo := Foo{"postedName", 1}
+	buf, _ := json.Marshal(foo)
+	body := bytes.NewBuffer(buf)
+
+	url := ts.URL + "/foo"
+	res, err := http.Post(url, "application/json", body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	assert_HTTP_Response(t, res, http.StatusOK, foo)
+}
+
+func Test_Pastis_POST_Having_Input_Handler(t *testing.T) {
+	p := NewAPI()
+	p.Post(func(vals url.Values, input Foo) (int, interface{}) {
+		return http.StatusOK, input
+	}, "/foo")
+
+	ts := httptest.NewServer(p)
+	defer ts.Close()
+
+	foo := Foo{"postedName", 1}
+	buf, _ := json.Marshal(foo)
+	body := bytes.NewBuffer(buf)
+
+	url := ts.URL + "/foo"
+	res, err := http.Post(url, "application/json", body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	assert_HTTP_Response(t, res, http.StatusOK, foo)
 }
