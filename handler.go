@@ -143,6 +143,7 @@ func (api *API) AddFilter(filter Filter) {
 	api.chain.Filters = append(api.chain.Filters, filter)
 }
 
+
 // AddResource adds a new resource to an API. The API will route
 // requests that match one of the given paths to the matching HTTP
 // method on the resource.
@@ -158,6 +159,15 @@ func (api *API) AddResource(resource interface{}, paths ...string) {
 	}
 }
 
+//Implements HandlerFunc
+func (api *API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if api.mux == nil {
+		log.Panic(errors.New("You must add at least one resource to this API."))
+	}
+	handler, _ := api.mux.Handler(r) 
+	handler.ServeHTTP(w, r)
+}
+
 // Start causes the API to begin serving requests on the given port.
 func (api *API) Start(port int) error {
 	if api.mux == nil {
@@ -166,3 +176,5 @@ func (api *API) Start(port int) error {
 	portString := fmt.Sprintf(":%d", port)
 	return http.ListenAndServe(portString, api.mux)
 }
+
+
