@@ -26,5 +26,8 @@ func main() {
 
 And run with:
 
+```golang
 go run main.go
+```
+
 View at: http://localhost:4567
