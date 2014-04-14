@@ -167,8 +167,7 @@ func (api *API) regexp(pattern string) *regexp.Regexp {
 		return fmt.Sprintf(`(?P<_%d>[^#?]*)`, index)
 	})
 	pattern += `\/?`
-	regex := regexp.MustCompile(pattern)
-	return regex
+	return regexp.MustCompile(pattern)
 }
 
 func (api *API) extractParams(pattern string, request *http.Request, urlValues url.Values) url.Values {
@@ -182,6 +181,18 @@ func (api *API) extractParams(pattern string, request *http.Request, urlValues u
 		}	
 	}
 	return urlValues
+}
+
+// URLWith returns the url pattern replacing the parameters for its values
+func ReplaceParametersWith(pattern string, str string) string {
+	reg := regexp.MustCompile(`:[^/#?()\.\\]+`)
+	url := reg.ReplaceAllStringFunc(pattern, func(m string) string {
+		log.Printf("Replacing [%s]", m)
+		val := str
+		return fmt.Sprintf(`%v`, val)
+	})
+	log.Printf("Replaced parameters of Pattern [%s] : now [%s]", pattern, url)
+	return url	
 }
 
 func (api *API) Match(r *regexp.Regexp, path string) (bool, map[string]string) {
@@ -232,7 +243,7 @@ func (api *API) AddResource(resource interface{}, pattern string) {
 	}
 	handler := api.resourceHandler(pattern, resource)
 	//TODO transform pattern 
-	api.addHandler(handler, pattern)
+	api.addHandler(handler, ReplaceParametersWith(pattern, "*"))
 }
 
 // Function callback paired with a request Method and URL-matching pattern. 
