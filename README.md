@@ -30,4 +30,4 @@ And run with:
 go run main.go
 ```
 
-View at: http://localhost:4567
+View at: http://localhost:4567/foo
