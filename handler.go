@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 )
 
 // An API manages a group of resources by routing to requests
@@ -114,7 +115,7 @@ func handleReturn(methodRef reflect.Value, methodParameterValues []reflect.Value
 //Return an instance of http.HandlerFunc built from  a pair of request method and a callback fn.
 //The first callback input parameter is the set of URL query and path parameters.
 //The second callback input parameter is the unmarshalled JSON body recieved from the request (if it exists).
-func (api *API) methodHandler(requestMethod string, fn reflect.Value) http.HandlerFunc {
+func (api *API) methodHandler(pattern string, requestMethod string, fn reflect.Value) http.HandlerFunc {
 	return func(rw http.ResponseWriter, request *http.Request) {
 
 		if request.ParseForm() != nil {
@@ -125,7 +126,11 @@ func (api *API) methodHandler(requestMethod string, fn reflect.Value) http.Handl
 			rw.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
-		code, data := handleMethodCall(request.Form, request, fn)
+		
+		params := api.extractParams(pattern, request, request.Form)
+				
+		code, data := handleMethodCall(params, request, fn)
+		
 		handlerFuncReturn(code, data, rw)
 	}
 }
@@ -134,18 +139,65 @@ func (api *API) methodHandler(requestMethod string, fn reflect.Value) http.Handl
 //A resource must implement GET, POST, DELETE, PUT or PATCH method having one or two parameters.
 //The first parameter is the set of URL query and path parameters.
 //The second parameter is the JSON blob recieved as a request body (if it exists).
-func (api *API) resourceHandler(resource interface{}) http.HandlerFunc {
+func (api *API) resourceHandler(pattern string, resource interface{}) http.HandlerFunc {
 	return func(rw http.ResponseWriter, request *http.Request) {
 
 		if request.ParseForm() != nil {
 			rw.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
-		code, data := handleResourceCall(request.Form, request, resource)
+		
+		params := api.extractParams(pattern, request, request.Form)
+		
+		code, data := handleResourceCall(params, request, resource)
 		handlerFuncReturn(code, data, rw)
 	}
 }
+
+//Build a regex based on the initial pattern 
+func (api *API) regexp(pattern string) *regexp.Regexp {
+	r := regexp.MustCompile(`:[^/#?()\.\\]+`)
+	pattern = r.ReplaceAllStringFunc(pattern, func(m string) string {
+		return fmt.Sprintf(`(?P<%s>[^/#?]+)`, m[1:])
+	})
+	r2 := regexp.MustCompile(`\*\*`)
+	var index int
+	pattern = r2.ReplaceAllStringFunc(pattern, func(m string) string {
+		index++
+		return fmt.Sprintf(`(?P<_%d>[^#?]*)`, index)
+	})
+	pattern += `\/?`
+	regex := regexp.MustCompile(pattern)
+	return regex
+}
+
+func (api *API) extractParams(pattern string, request *http.Request, urlValues url.Values) url.Values {
+	log.Printf("Extract params : URL [%s] | Pattern [%s] \n", request.URL.Path, pattern)
+	ok, params := api.Match(api.regexp(pattern), request.URL.Path)
+	if (ok) {
+		fmt.Println("Expression regular matches")
+		for key, _ := range params {
+			fmt.Println(key)
+			urlValues.Set(key,params[key])
+		}	
+	}
+	return urlValues
+}
+
+func (api *API) Match(r *regexp.Regexp, path string) (bool, map[string]string) {
+	matches := r.FindStringSubmatch(path)
+	if len(matches) > 0 && matches[0] == path {
+		params := make(map[string]string)
+		for i, name := range r.SubexpNames() {
+			if len(name) > 0 {
+				params[name] = matches[i]
+			}
+		}
+		return true, params
+	}
+	return false, nil
+}
+
 
 //Utility method writing status code and data to the given response 
 func handlerFuncReturn(code int, data interface{}, rw http.ResponseWriter) {
@@ -174,65 +226,65 @@ func (api *API) AddFilter(filter Filter) {
 // AddResource adds a new resource to an API. The API will route
 // requests that match one of the given paths to the matching HTTP
 // method on the resource.
-func (api *API) AddResource(resource interface{}, paths ...string) {
+func (api *API) AddResource(resource interface{}, pattern string) {
 	if api.mux == nil {
 		api.mux = http.NewServeMux()
 	}
-	handler := api.resourceHandler(resource)
-	api.addHandler(handler, paths...)
+	handler := api.resourceHandler(pattern, resource)
+	//TODO transform pattern 
+	api.addHandler(handler, pattern)
 }
 
 // Function callback paired with a request Method and URL-matching pattern. 
-func (api *API) Do(requestMethod string, fn interface{}, paths ...string) {
+func (api *API) Do(requestMethod string, fn interface{}, pattern string) {
 	if api.mux == nil {
 		api.mux = http.NewServeMux()
 	}
-	handler := api.methodHandler(requestMethod, reflect.ValueOf(fn))
-	api.addHandler(handler, paths...)
+	handler := api.methodHandler(pattern, requestMethod, reflect.ValueOf(fn))
+	//TODO transform pattern 	
+	api.addHandler(handler, pattern)
 }
 
 // Function callback paired with GET Method and URL-matching pattern. 
-func (api *API) Get(fn interface{}, paths ...string) {
-	api.Do("GET", fn, paths...)
+func (api *API) Get(fn interface{}, pattern string) {
+	api.Do("GET", fn, pattern)
 }
 
 // Function callback paired with PATH Method and URL-matching pattern. 
-func (api *API) Patch(fn interface{}, paths ...string) {
-	api.Do("PATCH", fn, paths...)
+func (api *API) Patch(fn interface{}, pattern string) {
+	api.Do("PATCH", fn, pattern)
 }
 
 // Function callback paired with OPTIONS Method and URL-matching pattern. 
-func (api *API) Options(fn interface{}, paths ...string) {
-	api.Do("OPTIONS", fn, paths...)
+func (api *API) Options(fn interface{}, pattern string) {
+	api.Do("OPTIONS", fn, pattern)
 }
 
 // Function callback paired with HEAD Method and URL-matching pattern. 
-func (api *API) Head(fn interface{}, paths ...string) {
-	api.Do("HEAD", fn, paths...)
+func (api *API) Head(fn interface{}, pattern string) {
+	api.Do("HEAD", fn, pattern)
 }
 
 // Function callback paired with POST Method and URL-matching pattern. 
-func (api *API) Post(fn interface{}, paths ...string) {
-	api.Do("POST", fn, paths...)
+func (api *API) Post(fn interface{}, pattern string) {
+	api.Do("POST", fn, pattern)
 }
 
 // Function callback paired with PUT Method and URL-matching pattern. 
-func (api *API) Put(fn interface{}, paths ...string) {
-	api.Do("PUT", fn, paths...)
+func (api *API) Put(fn interface{}, pattern string) {
+	api.Do("PUT", fn, pattern)
 }
 
 // Function callback paired with DELETE Method and URL-matching pattern. 
-func (api *API) Delete(fn interface{}, paths ...string) {
-	api.Do("DELETE", fn, paths...)
+func (api *API) Delete(fn interface{}, pattern string) {
+	api.Do("DELETE", fn, pattern)
 }
 
 // Function callback paired with a set of URL-matching pattern. 
-func (api *API) addHandler(handler http.HandlerFunc, paths ...string) {
-	for _, path := range paths {
-		pathChain := api.chain.Copy()
-		pathChain.Target = handler
-		api.mux.HandleFunc(path, pathChain.dispatchRequestHandler())
-	}
+func (api *API) addHandler(handler http.HandlerFunc, pattern string) {
+	pathChain := api.chain.Copy()
+	pathChain.Target = handler
+	api.mux.HandleFunc(pattern, pathChain.dispatchRequestHandler())
 }
 
 //Implements HandlerFunc

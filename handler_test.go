@@ -81,6 +81,30 @@ func Test_Pastis_Resource_Handler(t *testing.T) {
 	assert_HTTP_Response(t, res, http.StatusOK, Foo{"name", 1})
 }
 
+func Test_Pastis_URLMatch(t *testing.T) {
+	p := NewAPI()
+	ok, params := p.Match(p.regexp("/hello/:name"), "/hello/guregodevo")
+	expect(t, ok, true)
+	expect(t, params["name"], "guregodevo")
+}
+
+func Test_Pastis_Router(t *testing.T) {
+	p := NewAPI()
+	p.Do("GET", func(vals url.Values) (int, interface{}) {
+		return http.StatusOK, vals.Get("name")
+	}, "/hello/:name")
+
+	ts := httptest.NewServer(p)
+	defer ts.Close()
+
+	url := ts.URL + "/hello/guregodevo"
+	res, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+	assert_HTTP_Response(t, res, http.StatusOK, "guregodevo")
+}
+
 func Test_Pastis_Action_Handler(t *testing.T) {
 	p := NewAPI()
 	p.Do("GET", func(vals url.Values) (int, interface{}) {
