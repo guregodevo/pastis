@@ -10,6 +10,7 @@ Getting Started
 Pastis is a framework for quickly creating RESTful applications with minimal effort: 
 
 ```go
+#main.go
 package main
 
 import "net/url"
@@ -26,7 +27,7 @@ func main() {
 
 And run with:
 
-```golang
+```
 go run main.go
 ```
 

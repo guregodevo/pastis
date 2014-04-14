@@ -117,6 +117,7 @@ func handleReturn(methodRef reflect.Value, methodParameterValues []reflect.Value
 //The second callback input parameter is the unmarshalled JSON body recieved from the request (if it exists).
 func (api *API) methodHandler(pattern string, requestMethod string, fn reflect.Value) http.HandlerFunc {
 	return func(rw http.ResponseWriter, request *http.Request) {
+		log.Printf("DEBUG: methodHandler [pattern=%v,request=%v] ", pattern, request)
 
 		if request.ParseForm() != nil {
 			rw.WriteHeader(http.StatusBadRequest)
@@ -141,6 +142,7 @@ func (api *API) methodHandler(pattern string, requestMethod string, fn reflect.V
 //The second parameter is the JSON blob recieved as a request body (if it exists).
 func (api *API) resourceHandler(pattern string, resource interface{}) http.HandlerFunc {
 	return func(rw http.ResponseWriter, request *http.Request) {
+		log.Printf("DEBUG: resourceHandler [pattern=%v,request=%v] ", pattern, request)
 
 		if request.ParseForm() != nil {
 			rw.WriteHeader(http.StatusBadRequest)
@@ -183,8 +185,22 @@ func (api *API) extractParams(pattern string, request *http.Request, urlValues u
 	return urlValues
 }
 
+// HandlerPath returns the Server path 
+func HandlerPath(pattern string) string {
+	reg := regexp.MustCompile("^/*[^:]*")
+	matches := reg.FindString(pattern)
+	if len(matches) > 0 {
+		return matches
+	}
+	return pattern
+}
+
 // URLWith returns the url pattern replacing the parameters for its values
 func ReplaceParametersWith(pattern string, str string) string {
+	re := regexp.MustCompile("(?P<first>[a-zA-Z]+) (?P<last>[a-zA-Z]+)")
+	fmt.Println(re.MatchString("Alan Turing"))
+	fmt.Printf("%q\n", re.SubexpNames())
+
 	reg := regexp.MustCompile(`:[^/#?()\.\\]+`)
 	url := reg.ReplaceAllStringFunc(pattern, func(m string) string {
 		log.Printf("Replacing [%s]", m)
@@ -212,8 +228,11 @@ func (api *API) Match(r *regexp.Regexp, path string) (bool, map[string]string) {
 
 //Utility method writing status code and data to the given response 
 func handlerFuncReturn(code int, data interface{}, rw http.ResponseWriter) {
+	log.Printf("DEBUG: handlerFuncReturn %v", code)
+
 	content, err := json.Marshal(data)
 	if err != nil {
+		log.Printf("ERROR: handlerFuncReturn could not marshall content [%v]", data)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -242,8 +261,7 @@ func (api *API) AddResource(resource interface{}, pattern string) {
 		api.mux = http.NewServeMux()
 	}
 	handler := api.resourceHandler(pattern, resource)
-	//TODO transform pattern 
-	api.addHandler(handler, ReplaceParametersWith(pattern, "*"))
+	api.addHandler(handler, HandlerPath(pattern))
 }
 
 // Function callback paired with a request Method and URL-matching pattern. 
@@ -252,8 +270,8 @@ func (api *API) Do(requestMethod string, fn interface{}, pattern string) {
 		api.mux = http.NewServeMux()
 	}
 	handler := api.methodHandler(pattern, requestMethod, reflect.ValueOf(fn))
-	//TODO transform pattern 	
-	api.addHandler(handler, pattern)
+	api.addHandler(handler, HandlerPath(pattern))
+	log.Printf("DEBUG: Added Do [method={%v},pattern={%v}]", requestMethod, pattern)
 }
 
 // Function callback paired with GET Method and URL-matching pattern. 
@@ -293,6 +311,7 @@ func (api *API) Delete(fn interface{}, pattern string) {
 
 // Function callback paired with a set of URL-matching pattern. 
 func (api *API) addHandler(handler http.HandlerFunc, pattern string) {
+	log.Printf("DEBUG: Handle Func [pattern={%v}]", pattern)
 	pathChain := api.chain.Copy()
 	pathChain.Target = handler
 	api.mux.HandleFunc(pattern, pathChain.dispatchRequestHandler())
