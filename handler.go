@@ -25,7 +25,7 @@ type API struct {
 
 // NewAPI allocates and returns a new API.
 func NewAPI() *API {
-	return &API{chain: &FilterChain{[]Filter{}, 0, nil}}
+	return &API{chain: &FilterChain{[]Filter{}, 0, nil}, mux : http.NewServeMux()}
 }
 
 func ErrorResponse(err error) interface{} {
@@ -257,18 +257,12 @@ func (api *API) AddFilter(filter Filter) {
 // requests that match one of the given paths to the matching HTTP
 // method on the resource.
 func (api *API) AddResource(resource interface{}, pattern string) {
-	if api.mux == nil {
-		api.mux = http.NewServeMux()
-	}
 	handler := api.resourceHandler(pattern, resource)
 	api.addHandler(handler, HandlerPath(pattern))
 }
 
 // Function callback paired with a request Method and URL-matching pattern. 
 func (api *API) Do(requestMethod string, fn interface{}, pattern string) {
-	if api.mux == nil {
-		api.mux = http.NewServeMux()
-	}
 	handler := api.methodHandler(pattern, requestMethod, reflect.ValueOf(fn))
 	api.addHandler(handler, HandlerPath(pattern))
 	log.Printf("DEBUG: Added Do [method={%v},pattern={%v}]", requestMethod, pattern)

@@ -152,6 +152,11 @@ func Test_Pastis_POST_Having_Input_Handler(t *testing.T) {
 		return http.StatusOK, input
 	}, "/foo")
 
+	//p.Get(func(vals url.Values, input Foo) (int, interface{}) {
+	//	return http.StatusOK, input
+	//}, "/foo")
+
+
 	ts := httptest.NewServer(p)
 	defer ts.Close()
 
