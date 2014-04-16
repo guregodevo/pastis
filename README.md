@@ -1,7 +1,7 @@
 pastis
 ======
 
-Golang framework for developing ops-friendly, high-performance, RESTful web services
+Go framework for developing ops-friendly, high-performance, RESTful web services
 
 
 Getting Started
@@ -10,7 +10,7 @@ Getting Started
 Pastis is a framework for quickly creating RESTful applications with minimal effort: 
 
 ```go
-#main.go
+//main.go
 package main
 
 import "net/url"
@@ -32,3 +32,35 @@ go run main.go
 ```
 
 View at: http://localhost:4567/foo
+
+Routes
+======
+
+In Pastis, a route is an HTTP method paired with a URL-matching pattern.
+Each route is associated with a callback function: 
+
+```go
+
+	api.Get( func(vals url.Values) (int, interface{}) {
+		...show something
+	}, "/foo")
+
+	api.Post( func(vals url.Values) (int, interface{}) {
+		...create something
+	}, "/foo")
+
+	api.Put( func(vals url.Values) (int, interface{}) {
+		...modify something
+	}, "/foo")
+
+	api.Patch( func(vals url.Values) (int, interface{}) {
+		...modify something
+	}, "/foo")
+
+	api.Delete( func(vals url.Values) (int, interface{}) {
+		...delete something
+	}, "/foo")
+
+
+```
+

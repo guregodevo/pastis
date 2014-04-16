@@ -77,7 +77,7 @@ func handleMethodCall(urlValues url.Values, request *http.Request, methodRef ref
 		}
 	}
 
-	jsonValue := reflect.ValueOf(jsonInterface) //.Elem()
+	jsonValue := reflect.ValueOf(jsonInterface)
 	jsonValueType := jsonValue.Elem().Type()
 
 	if expectedJSONType.Kind() != jsonValue.Elem().Type().Kind() {
@@ -190,6 +190,16 @@ func (api *API) Post(fn interface{}, pattern string) {
 	api.Do("POST", fn, pattern)
 }
 
+// Function callback paired with LINK Method and URL-matching pattern. 
+func (api *API) Link(fn interface{}, pattern string) {
+	api.Do("LINK", fn, pattern)
+}
+
+// Function callback paired with UNLINK Method and URL-matching pattern. 
+func (api *API) Unlink(fn interface{}, pattern string) {
+	api.Do("UNLINK", fn, pattern)
+}
+
 // Function callback paired with PUT Method and URL-matching pattern. 
 func (api *API) Put(fn interface{}, pattern string) {
 	api.Do("PUT", fn, pattern)
@@ -215,16 +225,12 @@ func (api *API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	handler.ServeHTTP(w, r)
 }
 
-func (api *API) HandleFunc() {
-	//TODO Handle multiple patterns
+func (api *API) HandleFunc() {	
 	api.mux.HandleFunc("/", api.router.Handler())
 }
 
 // Start causes the API to begin serving requests on the given port.
 func (api *API) Start(port int) error {
-	//if api.mux == nil {
-	//	return errors.New("You must add at least one resource to this API.")
-	//}
 	api.HandleFunc()
 	portString := fmt.Sprintf(":%d", port)
 	return http.ListenAndServe(portString, api.mux)

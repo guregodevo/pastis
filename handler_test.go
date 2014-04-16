@@ -104,6 +104,9 @@ func Test_Pastis_Router(t *testing.T) {
 
 func Test_Pastis_Action_Handler(t *testing.T) {
 	p := NewAPI()
+	p.Do("PUT", func(vals url.Values) (int, interface{}) {
+		return http.StatusOK, Foo{"put", 1}
+	}, "/foo")
 	p.Do("GET", func(vals url.Values) (int, interface{}) {
 		return http.StatusOK, Foo{"name", 1}
 	}, "/foo")
