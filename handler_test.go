@@ -56,6 +56,9 @@ func Test_Pastis_Run(t *testing.T) {
 type FooResource struct {
 }
 
+type NestedFooResource struct {
+}
+
 type Foo struct {
 	Name  string
 	Order int
@@ -63,6 +66,10 @@ type Foo struct {
 
 func (api FooResource) GET(vals url.Values) (int, interface{}) {
 	return http.StatusOK, Foo{"name", 1}
+}
+
+func (api NestedFooResource) GET(vals url.Values) (int, interface{}) {
+	return http.StatusOK, Foo{vals.Get("nestedname"), 2}
 }
 
 func Test_Pastis_Resource_Handler(t *testing.T) {
@@ -82,6 +89,27 @@ func Test_Pastis_Resource_Handler(t *testing.T) {
 
 	assert_HTTP_Response(t, res, http.StatusOK, Foo{"name", 1})
 }
+
+func Test_Pastis_Nested_Resource_Handler(t *testing.T) {
+	resource := new(FooResource)
+	nestedresource := new(NestedFooResource)
+	p := NewAPI()
+	p.AddResource(resource, "/foo")
+	p.AddResource(nestedresource, "/foo/:name/nested/:nestedname")
+	p.HandleFunc()
+
+	ts := httptest.NewServer(p)
+	defer ts.Close()
+
+	url := ts.URL + "/foo/:name/nested/nestedFoo"
+	res, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	assert_HTTP_Response(t, res, http.StatusOK, Foo{"nestedFoo", 2})
+}
+
 
 func Test_Pastis_Router(t *testing.T) {
 	p := NewAPI()
@@ -156,7 +184,6 @@ func Test_Pastis_POST_Having_Input_Handler(t *testing.T) {
 	p.Get(func(vals url.Values, input Foo) (int, interface{}) {
 		return http.StatusOK, input
 	}, "/foo")
-
 
 	ts := httptest.NewServer(p)
 	defer ts.Close()

@@ -23,6 +23,10 @@ type API struct {
 	router *Router
 }
 
+type embedder interface {
+	embed(resource interface{})
+}
+
 // NewAPI allocates and returns a new API.
 func NewAPI() *API {
 	return &API{chain: &FilterChain{[]Filter{}, 0, nil}, mux : http.NewServeMux(), router: NewRouter()}
@@ -147,7 +151,7 @@ func (api *API) AddFilter(filter Filter) {
 // requests that match one of the given paths to the matching HTTP
 // method on the resource.
 func (api *API) AddResource(resource interface{}, pattern string) {
-	methods := []string {"GET","PUT","POST","PATCH","DELETE","OPTIONS"}
+	methods := []string {"GET","PUT","POST","PATCH","DELETE","OPTIONS", "LINK", "UNLINK"}
 	for _, requestMethod := range methods {
 		methodRef := reflect.ValueOf(resource).MethodByName(requestMethod)
 		if methodRef.Kind() != reflect.Invalid {
