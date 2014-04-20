@@ -73,7 +73,7 @@ Each route is associated with a callback function:
 
 Routes are matched in the order they are defined. The first route that matches the request is invoked.
 
-In Pastis, query parameters or path parameters are both accessible via the first block parameter of type url.Values.
+In Pastis, query or path parameters are both accessible via the first block parameter of type url.Values.
 
 Route patterns may include named parameters:
 
@@ -95,15 +95,64 @@ Routes may also utilize query parameters:
 	}, "/posts")
 ```
 
-In Pastis, the request body are also accessible via the second block parameter.
-Only data structures that can be represented as valid JSON will be decoded and passed to the second parameters meaning that the type could be : 
- * map[string]interface{}  or of struct types (those that begin with uppercase letter) for JSON Objects
+In Pastis, the request body is decoded and passed to the second parameter.
+Data structures that can be represented as valid JSON will be decoded and passed to the second parameters meaning that the type could be : 
+ * map[string]interface{}  or struct (those that begin with uppercase letter) for JSON Objects
  * []interface{}  for JSON arrays
- * A primitive type int or string in other cases
+ * Any Go type that matches the body content (int, string etc..)
 
+##Return Handler
 
+Every method call should return a tuple (int, interface{}). The int item represents the HTTP status code. The interface{} item represents the Response Body. It can be of any type. The return handler will marshall it into JSON.
 
+Examples:
+```go
+	return http.StatusOK, [] Chart{Chart{"name", 1},Chart{"name", 1}}
+	return http.StatusCreated, Identifier{params.Get("id"), 2}
+	return http.StatusOK, "Hello"
+```
 
+##Resources
+
+In Pastis, a resource is any Go struct that implements one of the HTTP method. 
+
+```go
+type DashboardResource struct {
+}
+
+type ChartResource struct {
+}
+
+type Chart struct {
+	Name  string
+	Order int
+}
+
+func (api DashboardResource) GET(params url.Values) (int, interface{}) {
+	...do something with params params.Get("dashboardid")	
+	return http.StatusOK, [] Chart{Chart{"name", 1},Chart{"name", 1}}
+}
+
+func (api ChartResource) GET(params url.Values) (int, interface{}) {
+	return http.StatusOK, Chart{params.Get("chartid"), 2}
+}
+
+func (api ChartResource) PUT(params url.Values) (int, interface{}) {
+	...do something with params params.Get("chartid")
+}
+```
+
+A resource route is a method paired with the resource URL. 
+Given that a resource might have several methods, each method route is associated with the resource function whose name matches the method. 
+
+```go
+dashboardResource := new(DashboardResource)
+chartResource := new(ChartResource)
+api := NewAPI()
+api.AddResource(dashboardResource, "/dashboards/:dashboardid")
+api.AddResource(chartResource, "/dashboards/:dashboardid/charts/:chartid")
+api.Start(44444)
+```
 
 
 
