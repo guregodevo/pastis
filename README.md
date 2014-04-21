@@ -186,5 +186,47 @@ Any filter can be added to apis
 ```
 
 
+## Testing
+
+Pastis tests can be written using any testing library or framework. The native Go package httptest is recommended:
+
+```go
+import (
+	"net/http/httptest"
+	"reflect"
+	"testing"
+)
+
+/* Test Helpers */
+func expect(t *testing.T, a interface{}, b interface{}) {
+	....
+}
+
+
+func assert_HTTP_Response(t *testing.T, res *http.Response, expectedStatusCode int, expectedResponsebody interface{}) {
+	....
+}
+
+func Test_Callback_With_Params(t *testing.T) {
+	p := NewAPI()
+	p.Get( "/hello/:name", func(params url.Values) (int, interface{}) {
+		fmt.Printf("Name : %v",params.Get("name"))
+		return http.StatusOK, Foo { params.Get("name"), 1 }
+	})
+	p.HandleFunc()
+
+	ts := httptest.NewServer(p)
+	defer ts.Close()
+
+	url := ts.URL + "/hello/guregodevo"
+	res, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+	assert_HTTP_Response(t, res, http.StatusOK, Foo{"guregodevo", 1})
+}
+```
+
+
 
 

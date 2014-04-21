@@ -131,9 +131,9 @@ func Test_Pastis_Callback_Parameter_Free(t *testing.T) {
 
 func Test_Pastis_Callback_URL_Params(t *testing.T) {
 	p := NewAPI()
-	p.Get( "/hello/:name", func(vals url.Values) (int, interface{}) {
-		fmt.Printf("Name : %v",vals.Get("name"))
-		return http.StatusOK, Foo { vals.Get("name"), 1 }
+	p.Get( "/hello/:name", func(params url.Values) (int, interface{}) {
+		fmt.Printf("Name : %v",params.Get("name"))
+		return http.StatusOK, Foo { params.Get("name"), 1 }
 	})
 	p.HandleFunc()
 
