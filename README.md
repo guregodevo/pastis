@@ -42,44 +42,44 @@ Each route is associated with a callback function:
 
 ```go
 
-	api.Get("/foo", func(vals url.Values) (int, interface{}) {
+	api.Get("/foo", func(params url.Values) (int, interface{}) {
 		...show something
 	})
 
-	api.Post("/foo", func(vals url.Values) (int, interface{}) {
+	api.Post("/foo", func(params url.Values) (int, interface{}) {
 		...create something
 	})
 
-	api.Put("/foo", func(vals url.Values) (int, interface{}) {
+	api.Put("/foo", func(params url.Values) (int, interface{}) {
 		...modify something
 	})
 
-	api.Patch("/foo", func(vals url.Values) (int, interface{}) {
+	api.Patch("/foo", func(params url.Values) (int, interface{}) {
 		...modify something
 	})
 
-	api.Delete("/foo", func(vals url.Values) (int, interface{}) {
+	api.Delete("/foo", func(params url.Values) (int, interface{}) {
 		...delete something
 	})
 
-	api.Link("/foo", func(vals url.Values) (int, interface{}) {
+	api.Link("/foo", func(params url.Values) (int, interface{}) {
 		...affiliate something
 	})
 
-	api.Unlink("/foo", func(vals url.Values) (int, interface{}) {
+	api.Unlink("/foo", func(params url.Values) (int, interface{}) {
 		...separate something
 	})
 ```
 
 Routes are matched in the order they are defined. The first route that matches the request is invoked.
 
-In Pastis, query or path parameters are both accessible via the first block parameter of type url.Values.
+In Pastis, query or path parameters are both accessible via the optional callback parameter of type url.Values. Note that this parameter is optional and there must be at most one of this type among the callback input parameters. By convention, it must be declared before any other callback parameter.
 
 Route patterns may include named parameters:
 
 ```go
 	api.Get("/posts/:title", func(params url.Values) (int, interface{}) {
-		title := vals.Get("title")
+		title := params.Get("title")
                 ...show something with this named parameter
 	})
 ```
@@ -87,28 +87,30 @@ Route patterns may include named parameters:
 Routes may also utilize query parameters:
 
 ```go
-	api.get("/posts", func(params url.Values) (int, interface{}) {
-		title := vals.Get("title")
-		author := vals.Get("author")
+	api.Get("/posts", func(params url.Values) (int, interface{}) {
+		title := params.Get("title")
+		author := params.Get("author")
 		greeding := fmt.SPrintf("Hello %s", name)	
 		// uses title and author variables; query is optional to the /posts route
 	})
 ```
 
-In Pastis, the request body is decoded and passed to the second parameter.
-Data structures that can be represented as valid JSON will be decoded and passed to the second parameters meaning that the type could be : 
+Routes may require the request body. In Pastis, the request body is decoded to the type of the callback parameter that you declared as input parameter in the callback. Any parameter that has a type different from url.Values will match the request body content provided that it can be represented as valid JSON. 
+
+Possible request body parameter can be any of the following types: 
  * map[string]interface{}  or struct (those that begin with uppercase letter) for JSON Objects
  * []interface{}  for JSON arrays
- * Any Go type that matches the body content (int, string etc..)
+ * Any Go type that matches the body content that is more convenient that the type above (int, string etc..)
 
 ##Return Handler
 
-Every method call should return a tuple (int, interface{}). The int item represents the HTTP status code. The interface{} item represents the Response Body. It can be of any type. The return handler will marshall it into JSON.
+Every callback execution should end up returning a tuple (int, interface{}). The tuple element of type int represents the HTTP status code. The other one of type interface{} represents the response content. The return handler will take care of marshalling this content into JSON.
 
 Examples:
 ```go
 	return http.StatusOK, [] Chart{Chart{"name", 1},Chart{"name", 1}}
 	return http.StatusCreated, Identifier{params.Get("id"), 2}
+	return http.StatusCreated, map[string]interface{} {"id":1, "size":3, "type":"line"}
 	return http.StatusOK, "Hello"
 ```
 
@@ -142,7 +144,7 @@ func (api ChartResource) PUT(params url.Values) (int, interface{}) {
 }
 ```
 
-A resource route is a method paired with the resource URL. 
+A resource route is a method paired with its URL-matching pattern. 
 Given that a resource might have several methods, each method route is associated with the resource function whose name matches the method. 
 
 ```go
