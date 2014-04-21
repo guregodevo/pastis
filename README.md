@@ -20,9 +20,9 @@ import "github.com/guregodevo/pastis"
 
 func main() {
 	api := pastis.NewAPI()
-	api.Get( func(vals url.Values) (int, interface{}) {
+	api.Get("/foo",  func() (int, interface{}) {
 		return 200, "Hello"
-	}, "/foo")
+	})
 	api.Start(4567)
 }
 ```

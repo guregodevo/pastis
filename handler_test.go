@@ -110,8 +110,26 @@ func Test_Pastis_Nested_Resource_Handler(t *testing.T) {
 	assert_HTTP_Response(t, res, http.StatusOK, Foo{"nestedFoo", 2})
 }
 
+func Test_Pastis_Callback_Parameter_Free(t *testing.T) {
+	p := NewAPI()
+	p.Get( "/hello/", func() (int, interface{}) {
+		return http.StatusOK, nil
+	})
+	p.HandleFunc()
 
-func Test_Pastis_Router(t *testing.T) {
+	ts := httptest.NewServer(p)
+	defer ts.Close()
+
+	url := ts.URL + "/hello/"
+	res, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}	
+	expect(t, res.StatusCode, http.StatusOK)
+}
+
+
+func Test_Pastis_Callback_URL_Params(t *testing.T) {
 	p := NewAPI()
 	p.Get( "/hello/:name", func(vals url.Values) (int, interface{}) {
 		fmt.Printf("Name : %v",vals.Get("name"))
@@ -130,7 +148,7 @@ func Test_Pastis_Router(t *testing.T) {
 	assert_HTTP_Response(t, res, http.StatusOK, Foo{"guregodevo", 1})
 }
 
-func Test_Pastis_Action_Handler(t *testing.T) {
+func Test_Pastis_Callback_Handler(t *testing.T) {
 	p := NewAPI()
 	p.Do("PUT", "/foo", func(vals url.Values) (int, interface{}) {
 		return http.StatusOK, Foo{"put", 1}
@@ -151,7 +169,7 @@ func Test_Pastis_Action_Handler(t *testing.T) {
 	assert_HTTP_Response(t, res, http.StatusOK, Foo{"name", 1})
 }
 
-func Test_Pastis_Action_Having_Input_Handler(t *testing.T) {
+func Test_Pastis_Callback_Having_Input_Handler(t *testing.T) {
 	p := NewAPI()
 	p.Post( "/foo", func(vals url.Values, input Foo) (int, interface{}) {
 		return http.StatusOK, input

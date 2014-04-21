@@ -48,24 +48,36 @@ func handleMethodCall(urlValues url.Values, request *http.Request, methodRef ref
 	methodType := methodRef.Type()
 	methodArgSize := methodRef.Type().NumIn()
 
-	if methodArgSize == 0 {
-		log.Println("ERROR: method %v cannot have 0 argument", methodRef)
-		return http.StatusNotImplemented, nil
-	}
-
+	log.Printf("DEBUG method has %v argument.", methodArgSize)
+	
 	if methodArgSize >= 3 {
 		log.Println("ERROR: method %v cannot have more than 2 arguments", methodRef)
 		return http.StatusNotImplemented, nil
 	}
-
+	
+	if methodArgSize == 0 {
+		log.Println("DEBUG method %v has no argument. Skip marshalling...", methodRef)
+		return handleReturn(methodRef, []reflect.Value{ })
+	}
+	
 	valueOfUrlValues := reflect.ValueOf(urlValues)
 	methodParameterValues := []reflect.Value{valueOfUrlValues}
 
-	if methodArgSize == 1 {
-		return handleReturn(methodRef, methodParameterValues)
-	}
+	expectedJSONType := methodType.In(0)	
 
-	expectedJSONType := methodType.In(1)
+	if methodArgSize == 1 {
+		if expectedJSONType == valueOfUrlValues.Type() {
+			log.Println("DEBUG method %v has one argument of type url.Values. Skip marshalling...")
+			return handleReturn(methodRef, methodParameterValues)			
+		} else {
+			log.Println("DEBUG method %v has one argument of request body type. ")
+			methodParameterValues = []reflect.Value{} // will add later the json body as parameter
+		}
+	} else if methodArgSize == 2 {
+		log.Printf("DEBUG method first argument is not the request body type.\n")
+		expectedJSONType = methodType.In(1)
+		log.Printf("DEBUG method second argument is the request body type %v.\n", expectedJSONType)
+	}
 
 	expectedJSONValue := reflect.New(expectedJSONType)
 
