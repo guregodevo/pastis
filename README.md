@@ -185,6 +185,15 @@ Any filter can be added to apis
 	api.AddFilter(pastis.LoggingFilter)
 ```
 
+##CORS Support
+
+Pastis provides CORS filter. If you need it, just add the CORS filter to your api. 
+
+```go
+	var api = pastis.NewAPI()
+	api.AddFilter(pastis.CORSFilter)
+```
+
 
 ## Testing
 
