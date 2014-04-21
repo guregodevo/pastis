@@ -42,33 +42,33 @@ Each route is associated with a callback function:
 
 ```go
 
-	api.Get( func(vals url.Values) (int, interface{}) {
+	api.Get("/foo", func(vals url.Values) (int, interface{}) {
 		...show something
-	}, "/foo")
+	})
 
-	api.Post( func(vals url.Values) (int, interface{}) {
+	api.Post("/foo", func(vals url.Values) (int, interface{}) {
 		...create something
-	}, "/foo")
+	})
 
-	api.Put( func(vals url.Values) (int, interface{}) {
+	api.Put("/foo", func(vals url.Values) (int, interface{}) {
 		...modify something
-	}, "/foo")
+	})
 
-	api.Patch( func(vals url.Values) (int, interface{}) {
+	api.Patch("/foo", func(vals url.Values) (int, interface{}) {
 		...modify something
-	}, "/foo")
+	})
 
-	api.Delete( func(vals url.Values) (int, interface{}) {
+	api.Delete("/foo", func(vals url.Values) (int, interface{}) {
 		...delete something
-	}, "/foo")
+	})
 
-	api.Link( func(vals url.Values) (int, interface{}) {
+	api.Link("/foo", func(vals url.Values) (int, interface{}) {
 		...affiliate something
-	}, "/foo")
+	})
 
-	api.Unlink( func(vals url.Values) (int, interface{}) {
+	api.Unlink("/foo", func(vals url.Values) (int, interface{}) {
 		...separate something
-	}, "/foo")
+	})
 ```
 
 Routes are matched in the order they are defined. The first route that matches the request is invoked.
@@ -78,21 +78,21 @@ In Pastis, query or path parameters are both accessible via the first block para
 Route patterns may include named parameters:
 
 ```go
-	api.Get(func(params url.Values) (int, interface{}) {
+	api.Get("/posts/:title", func(params url.Values) (int, interface{}) {
 		title := vals.Get("title")
                 ...show something with this named parameter
-	}, "/posts/:title")
+	})
 ```
 
 Routes may also utilize query parameters:
 
 ```go
-	api.get(func(params url.Values) (int, interface{}) {
+	api.get("/posts", func(params url.Values) (int, interface{}) {
 		title := vals.Get("title")
 		author := vals.Get("author")
 		greeding := fmt.SPrintf("Hello %s", name)	
 		// uses title and author variables; query is optional to the /posts route
-	}, "/posts")
+	})
 ```
 
 In Pastis, the request body is decoded and passed to the second parameter.
@@ -149,8 +149,8 @@ Given that a resource might have several methods, each method route is associate
 dashboardResource := new(DashboardResource)
 chartResource := new(ChartResource)
 api := NewAPI()
-api.AddResource(dashboardResource, "/dashboards/:dashboardid")
-api.AddResource(chartResource, "/dashboards/:dashboardid/charts/:chartid")
+api.AddResource("/dashboards/:dashboardid", dashboardResource)
+api.AddResource("/dashboards/:dashboardid/charts/:chartid", chartResource, )
 api.Start(44444)
 ```
 

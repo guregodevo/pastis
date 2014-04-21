@@ -75,7 +75,7 @@ func (api NestedFooResource) GET(vals url.Values) (int, interface{}) {
 func Test_Pastis_Resource_Handler(t *testing.T) {
 	resource := new(FooResource)
 	p := NewAPI()
-	p.AddResource(resource, "/foo")
+	p.AddResource("/foo", resource)
 	p.HandleFunc()
 
 	ts := httptest.NewServer(p)
@@ -94,8 +94,8 @@ func Test_Pastis_Nested_Resource_Handler(t *testing.T) {
 	resource := new(FooResource)
 	nestedresource := new(NestedFooResource)
 	p := NewAPI()
-	p.AddResource(resource, "/foo")
-	p.AddResource(nestedresource, "/foo/:name/nested/:nestedname")
+	p.AddResource("/foo", resource)
+	p.AddResource("/foo/:name/nested/:nestedname", nestedresource)
 	p.HandleFunc()
 
 	ts := httptest.NewServer(p)
@@ -113,10 +113,10 @@ func Test_Pastis_Nested_Resource_Handler(t *testing.T) {
 
 func Test_Pastis_Router(t *testing.T) {
 	p := NewAPI()
-	p.Get(func(vals url.Values) (int, interface{}) {
+	p.Get( "/hello/:name", func(vals url.Values) (int, interface{}) {
 		fmt.Printf("Name : %v",vals.Get("name"))
 		return http.StatusOK, Foo { vals.Get("name"), 1 }
-	}, "/hello/:name")
+	})
 	p.HandleFunc()
 
 	ts := httptest.NewServer(p)
@@ -132,12 +132,12 @@ func Test_Pastis_Router(t *testing.T) {
 
 func Test_Pastis_Action_Handler(t *testing.T) {
 	p := NewAPI()
-	p.Do("PUT", func(vals url.Values) (int, interface{}) {
+	p.Do("PUT", "/foo", func(vals url.Values) (int, interface{}) {
 		return http.StatusOK, Foo{"put", 1}
-	}, "/foo")
-	p.Do("GET", func(vals url.Values) (int, interface{}) {
+	})
+	p.Do("GET", "/foo", func(vals url.Values) (int, interface{}) {
 		return http.StatusOK, Foo{"name", 1}
-	}, "/foo")
+	})
 	p.HandleFunc()
 
 	ts := httptest.NewServer(p)
@@ -153,9 +153,9 @@ func Test_Pastis_Action_Handler(t *testing.T) {
 
 func Test_Pastis_Action_Having_Input_Handler(t *testing.T) {
 	p := NewAPI()
-	p.Post( func(vals url.Values, input Foo) (int, interface{}) {
+	p.Post( "/foo", func(vals url.Values, input Foo) (int, interface{}) {
 		return http.StatusOK, input
-	}, "/foo")
+	})
 	p.HandleFunc()
 
 	ts := httptest.NewServer(p)
@@ -176,14 +176,14 @@ func Test_Pastis_Action_Having_Input_Handler(t *testing.T) {
 
 func Test_Pastis_POST_Having_Input_Handler(t *testing.T) {
 	p := NewAPI()
-	p.Post(func(vals url.Values, input Foo) (int, interface{}) {
+	p.Post("/foo", func(vals url.Values, input Foo) (int, interface{}) {
 		return http.StatusOK, input
-	}, "/foo")
+	})
 	p.HandleFunc()
 
-	p.Get(func(vals url.Values, input Foo) (int, interface{}) {
+	p.Get("/foo", func(vals url.Values, input Foo) (int, interface{}) {
 		return http.StatusOK, input
-	}, "/foo")
+	})
 
 	ts := httptest.NewServer(p)
 	defer ts.Close()

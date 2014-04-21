@@ -112,8 +112,7 @@ func handleReturn(methodRef reflect.Value, methodParameterValues []reflect.Value
 //The second callback input parameter is the unmarshalled JSON body recieved from the request (if it exists).
 func (api *API) methodHandler(pattern string, requestMethod string, fn reflect.Value) http.HandlerFunc {
 	return func(rw http.ResponseWriter, request *http.Request) {
-		//params := api.extractParams(pattern, request, request.Form)
-				
+			
 		code, data := handleMethodCall(request.Form, request, fn)
 		
 		handlerFuncReturn(code, data, rw)
@@ -150,8 +149,8 @@ func (api *API) AddFilter(filter Filter) {
 // AddResource adds a new resource to an API. The API will route
 // requests that match one of the given paths to the matching HTTP
 // method on the resource.
-func (api *API) AddResource(resource interface{}, pattern string) {
-	methods := []string {"GET","PUT","POST","PATCH","DELETE","OPTIONS", "LINK", "UNLINK"}
+func (api *API) AddResource(pattern string, resource interface{}) {
+	methods := []string {"GET","PUT","POST","PATCH","DELETE","OPTIONS"}
 	for _, requestMethod := range methods {
 		methodRef := reflect.ValueOf(resource).MethodByName(requestMethod)
 		if methodRef.Kind() != reflect.Invalid {
@@ -163,55 +162,55 @@ func (api *API) AddResource(resource interface{}, pattern string) {
 }
 
 // Function callback paired with a request Method and URL-matching pattern. 
-func (api *API) Do(requestMethod string, fn interface{}, pattern string) {
+func (api *API) Do(requestMethod string, pattern string, fn interface{}) {
 	handler := api.methodHandler(pattern, requestMethod, reflect.ValueOf(fn))
 	api.addHandler(requestMethod, handler, pattern)
 	log.Printf("DEBUG: Added Do [method={%v},pattern={%v}]", requestMethod, pattern)
 }
 
 // Function callback paired with GET Method and URL-matching pattern. 
-func (api *API) Get(fn interface{}, pattern string) {
-	api.Do("GET", fn, pattern)
+func (api *API) Get(pattern string, fn interface{}) {
+	api.Do("GET", pattern, fn)
 }
 
 // Function callback paired with PATH Method and URL-matching pattern. 
-func (api *API) Patch(fn interface{}, pattern string) {
-	api.Do("PATCH", fn, pattern)
+func (api *API) Patch(pattern string, fn interface{}) {
+	api.Do("PATCH", pattern, fn)
 }
 
 // Function callback paired with OPTIONS Method and URL-matching pattern. 
-func (api *API) Options(fn interface{}, pattern string) {
-	api.Do("OPTIONS", fn, pattern)
+func (api *API) Options(pattern string, fn interface{}) {
+	api.Do("OPTIONS", pattern, fn)
 }
 
 // Function callback paired with HEAD Method and URL-matching pattern. 
-func (api *API) Head(fn interface{}, pattern string) {
-	api.Do("HEAD", fn, pattern)
+func (api *API) Head(pattern string, fn interface{}) {
+	api.Do("HEAD", pattern, fn)
 }
 
 // Function callback paired with POST Method and URL-matching pattern. 
-func (api *API) Post(fn interface{}, pattern string) {
-	api.Do("POST", fn, pattern)
+func (api *API) Post(pattern string, fn interface{}) {
+	api.Do("POST", pattern, fn)
 }
 
 // Function callback paired with LINK Method and URL-matching pattern. 
-func (api *API) Link(fn interface{}, pattern string) {
-	api.Do("LINK", fn, pattern)
+func (api *API) Link(pattern string, fn interface{}) {
+	api.Do("LINK", pattern, fn)
 }
 
 // Function callback paired with UNLINK Method and URL-matching pattern. 
-func (api *API) Unlink(fn interface{}, pattern string) {
-	api.Do("UNLINK", fn, pattern)
+func (api *API) Unlink(pattern string, fn interface{}) {
+	api.Do("UNLINK", pattern, fn)
 }
 
 // Function callback paired with PUT Method and URL-matching pattern. 
-func (api *API) Put(fn interface{}, pattern string) {
-	api.Do("PUT", fn, pattern)
+func (api *API) Put(pattern string, fn interface{}) {
+	api.Do("PUT", pattern, fn)
 }
 
 // Function callback paired with DELETE Method and URL-matching pattern. 
 func (api *API) Delete(fn interface{}, pattern string) {
-	api.Do("DELETE", fn, pattern)
+	api.Do("DELETE", pattern, fn)
 }
 
 // Function callback paired with a set of URL-matching pattern. 
