@@ -102,7 +102,7 @@ Possible request body parameter can be any of the following types:
  * []interface{}  for JSON arrays
  * Any Go type that matches the body content that is more convenient that the type above (int, string etc..)
 
-##Return Handler
+##Return Values
 
 Every callback execution should end up returning a tuple (int, interface{}). The tuple element of type int represents the HTTP status code. The other one of type interface{} represents the response content. The return handler will take care of marshalling this content into JSON.
 
@@ -144,16 +144,45 @@ func (api ChartResource) PUT(params url.Values) (int, interface{}) {
 }
 ```
 
-A resource route is a method paired with its URL-matching pattern. 
-Given that a resource might have several methods, each method route is associated with the resource function whose name matches the method. 
+A resource has a unique URL-matching pattern. Therefore, each resource route method is associated with the resource method function whose name matches.
 
 ```go
 dashboardResource := new(DashboardResource)
 chartResource := new(ChartResource)
 api := NewAPI()
 api.AddResource("/dashboards/:dashboardid", dashboardResource)
-api.AddResource("/dashboards/:dashboardid/charts/:chartid", chartResource, )
+api.AddResource("/dashboards/:dashboardid/charts/:chartid", chartResource )
 api.Start(44444)
+```
+
+In the above example, the chart resource PUT method matches the HTTP method "PUT" and the resource URL  "/dashboards/:dashboardid/charts/:chartid". 
+
+Resource method functions behave exactly like callback method except that they match the resource route.
+
+##Filters
+
+Filters are evaluated before and/or after request within the same context as the routes will be and can modify the request and response.
+
+A filter is any function that sastifies this interface : 
+
+```go
+type Filter func(http.ResponseWriter, *http.Request, *FilterChain)
+
+
+// Filter (post-process) Filter (as a struct that defines a FilterFunction)
+func LoggingFilter(w http.ResponseWriter, request *http.Request, chain *FilterChain) {
+	now := time.Now()
+	chain.NextFilter(w, request)
+	log.Printf("[HTTP] %s %s [%v]\n", request.Method, request.URL, time.Now().Sub(now))
+}
+
+```
+
+Any filter can be added to apis
+
+```go
+	var api = pastis.NewAPI()
+	api.AddFilter(pastis.LoggingFilter)
 ```
 
 
