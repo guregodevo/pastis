@@ -64,11 +64,11 @@ type Foo struct {
 	Order int
 }
 
-func (api FooResource) GET(vals url.Values) (int, interface{}) {
+func (api FooResource) Get(vals url.Values) (int, interface{}) {
 	return http.StatusOK, Foo{"name", 1}
 }
 
-func (api NestedFooResource) GET(vals url.Values) (int, interface{}) {
+func (api NestedFooResource) Get(vals url.Values) (int, interface{}) {
 	return http.StatusOK, Foo{vals.Get("nestedname"), 2}
 }
 

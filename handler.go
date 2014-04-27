@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 
@@ -163,6 +164,7 @@ func (api *API) AddResource(pattern string, resource interface{}) {
 	for _, requestMethod := range methods {
 		methodRef := reflect.ValueOf(resource).MethodByName(requestMethod)
 		if methodRef.Kind() != reflect.Invalid {
+			requestMethod = strings.ToUpper(requestMethod)
 			handler := api.methodHandler(pattern, requestMethod, methodRef)
 			api.addHandler(requestMethod, handler, pattern)
 			log.Printf("DEBUG: Added Resource [method={%v},pattern={%v}]", requestMethod, pattern)
