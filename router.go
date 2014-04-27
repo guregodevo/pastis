@@ -2,7 +2,6 @@ package pastis
 
 import "net/http"
 import "log"
-//import "net/url"
 import "fmt"
 import "regexp"
 
@@ -10,17 +9,33 @@ type Router struct {
 	handlers map[string] map[string] http.HandlerFunc	
 }
 
+//Prints out the routes
+func (router *Router) OpsFriendLog() {
+	fmt.Println("API Routes")
+	log := make(map[string][]string)
+
+	for method, _ := range router.handlers {
+		for pattern, _ := range router.handlers[method] {
+			log[pattern] = []string { method }
+		}
+	}
+	for pattern := range log {
+		for _, method := range log[pattern] {
+			fmt.Printf(" %v %s \n", method, pattern)
+		}
+	}	
+}
+
 func NewRouter() *Router {
 	hs := make(map[string]map[string]http.HandlerFunc)
 	return &Router{ hs }
 }
 
-func (router *Router) Add(pattern string, method string, handler http.HandlerFunc) error {
+func (router *Router) Add(pattern string, method string, handler http.HandlerFunc) {
 	if router.handlers[method] == nil {
 		router.handlers[method] = make(map[string] http.HandlerFunc)
 	}
 	router.handlers[method][pattern] = handler
-	return nil
 }
 
 //Build a regex based on the initial pattern 

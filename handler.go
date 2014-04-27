@@ -23,9 +23,6 @@ type API struct {
 	router *Router
 }
 
-type embedder interface {
-	embed(resource interface{})
-}
 
 // NewAPI allocates and returns a new API.
 func NewAPI() *API {
@@ -119,7 +116,7 @@ func handleReturn(methodRef reflect.Value, methodParameterValues []reflect.Value
 	return int(responseValues[0].Int()), responseValues[1].Interface()
 }
 
-//Return an instance of http.HandlerFunc built from  a pair of request method and a callback fn.
+//Return an instance of http.HandlerFunc built from  a request method, a URL-pattern matching and a callback function fn.
 //The first callback input parameter is the set of URL query and path parameters.
 //The second callback input parameter is the unmarshalled JSON body recieved from the request (if it exists).
 func (api *API) methodHandler(pattern string, requestMethod string, fn reflect.Value) http.HandlerFunc {
@@ -159,10 +156,10 @@ func (api *API) AddFilter(filter Filter) {
 }
 
 // AddResource adds a new resource to an API. The API will route
-// requests that match one of the given paths to the matching HTTP
+// requests that match the given path to its HTTP
 // method on the resource.
 func (api *API) AddResource(pattern string, resource interface{}) {
-	methods := []string {"GET","PUT","POST","PATCH","DELETE","OPTIONS"}
+	methods := []string {"GET","Get", "Put", "PUT","Post", "POST","Patch", "PATCH","DELETE","Delete","Options","OPTIONS"}
 	for _, requestMethod := range methods {
 		methodRef := reflect.ValueOf(resource).MethodByName(requestMethod)
 		if methodRef.Kind() != reflect.Invalid {
@@ -240,8 +237,9 @@ func (api *API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	handler.ServeHTTP(w, r)
 }
 
-func (api *API) HandleFunc() {	
+func (api *API) HandleFunc() {
 	api.mux.HandleFunc("/", api.router.Handler())
+	api.router.OpsFriendLog()
 }
 
 // Start causes the API to begin serving requests on the given port.

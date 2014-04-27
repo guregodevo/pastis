@@ -17,3 +17,9 @@ func Test_Pastis_URLMatch(t *testing.T) {
 	
 }
 
+func Test_Pastis_RegexpMatch(t *testing.T) {
+	ok, params := Match(Regexp("^/comment/(?P<id>\\d+)$"), "/comment/123")
+	expect(t, ok, true)
+	expect(t, params["id"], "123")
+}
+
