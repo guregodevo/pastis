@@ -248,5 +248,12 @@ func (api *API) HandleFunc() {
 func (api *API) Start(port int) error {
 	api.HandleFunc()
 	portString := fmt.Sprintf(":%d", port)
-	return http.ListenAndServe(portString, api.mux)
+
+	err := http.ListenAndServe(portString, api.mux)
+	if (err != nil) {
+		log.Println("ERROR : could not start API")
+		return err
+	}
+	log.Printf("INFO: API successfully started at port %d \n", port)
+	return nil
 }
