@@ -49,19 +49,19 @@ func handleMethodCall(urlValues url.Values, request *http.Request, methodRef ref
 	log.Printf("DEBUG method has %v argument.", methodArgSize)
 	
 	if methodArgSize >= 3 {
-		log.Println("ERROR: method %v cannot have more than 2 arguments", methodRef)
+		log.Printf("ERROR: method %v cannot have more than 2 arguments\n", methodRef)
 		return http.StatusNotImplemented, nil
 	}
 	
 	if methodArgSize == 0 {
-		log.Println("DEBUG method %v has no argument. Skip marshalling...", methodRef)
+		log.Printf("DEBUG method %v has no argument. Skip marshalling...\n", methodRef)
 		return handleReturn(methodRef, []reflect.Value{ })
 	}
 	
 	valueOfUrlValues := reflect.ValueOf(urlValues)
 	methodParameterValues := []reflect.Value{valueOfUrlValues}
 
-	expectedJSONType := methodType.In(0)	
+	expectedJSONType := methodType.In(0)
 
 	if methodArgSize == 1 {
 		if expectedJSONType == valueOfUrlValues.Type() {

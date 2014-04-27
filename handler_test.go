@@ -9,24 +9,10 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/url"
-	"reflect"
 	"testing"
 )
 
-/* Test Helpers */
-func expect(t *testing.T, a interface{}, b interface{}) {
-	if a != b {
-		t.Errorf("Expected %v (type %v) - Got %v (type %v)", b, reflect.TypeOf(b), a, reflect.TypeOf(a))
-	}
-}
-
-func refute(t *testing.T, a interface{}, b interface{}) {
-	if a == b {
-		t.Errorf("Did not expect %v (type %v) - Got %v (type %v)", b, reflect.TypeOf(b), a, reflect.TypeOf(a))
-	}
-}
-
-func assert_HTTP_Response(t *testing.T, res *http.Response, expectedStatusCode int, expectedResponsebody interface{}) {
+func assert_Foo_Response(t *testing.T, res *http.Response, expectedStatusCode int, expectedResponsebody interface{}) {
 	expect(t, res.StatusCode, expectedStatusCode)
 	var body []byte
 	body, err := ioutil.ReadAll(res.Body)
@@ -40,6 +26,7 @@ func assert_HTTP_Response(t *testing.T, res *http.Response, expectedStatusCode i
 	}
 	expect(t, f, expectedResponsebody)
 }
+
 
 func Test_NewAPI(t *testing.T) {
 	m := NewAPI()
@@ -57,11 +44,6 @@ type FooResource struct {
 }
 
 type NestedFooResource struct {
-}
-
-type Foo struct {
-	Name  string
-	Order int
 }
 
 func (api FooResource) Get(vals url.Values) (int, interface{}) {
@@ -87,8 +69,10 @@ func Test_Pastis_Resource_Handler(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	assert_HTTP_Response(t, res, http.StatusOK, Foo{"name", 1})
+	assert_Foo_Response(t, res, http.StatusOK, Foo{"name", 1})
 }
+
+
 
 func Test_Pastis_Nested_Resource_Handler(t *testing.T) {
 	resource := new(FooResource)
@@ -107,7 +91,7 @@ func Test_Pastis_Nested_Resource_Handler(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	assert_HTTP_Response(t, res, http.StatusOK, Foo{"nestedFoo", 2})
+	assert_Foo_Response(t, res, http.StatusOK, Foo{"nestedFoo", 2})
 }
 
 func Test_Pastis_Callback_Parameter_Free(t *testing.T) {
@@ -140,12 +124,12 @@ func Test_Pastis_Callback_URL_Params(t *testing.T) {
 	ts := httptest.NewServer(p)
 	defer ts.Close()
 
-	url := ts.URL + "/hello/guregodevo"
+	url := ts.URL + "/hello/johnDoe"
 	res, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
 	}
-	assert_HTTP_Response(t, res, http.StatusOK, Foo{"guregodevo", 1})
+	assert_Foo_Response(t, res, http.StatusOK, Foo{"johnDoe", 1})
 }
 
 func Test_Pastis_Callback_Handler(t *testing.T) {
@@ -166,7 +150,7 @@ func Test_Pastis_Callback_Handler(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	assert_HTTP_Response(t, res, http.StatusOK, Foo{"name", 1})
+	assert_Foo_Response(t, res, http.StatusOK, Foo{"name", 1})
 }
 
 func Test_Pastis_Callback_Having_Input_Handler(t *testing.T) {
@@ -189,7 +173,7 @@ func Test_Pastis_Callback_Having_Input_Handler(t *testing.T) {
 		fmt.Printf("Post : %v",err)
 		log.Fatal(err)
 	}
-	assert_HTTP_Response(t, res, http.StatusOK, foo)
+	assert_Foo_Response(t, res, http.StatusOK, foo)
 }
 
 func Test_Pastis_POST_Having_Input_Handler(t *testing.T) {
@@ -215,5 +199,5 @@ func Test_Pastis_POST_Having_Input_Handler(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	assert_HTTP_Response(t, res, http.StatusOK, foo)
+	assert_Foo_Response(t, res, http.StatusOK, foo)
 }
