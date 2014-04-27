@@ -3,6 +3,17 @@ pastis
 
 Go framework for developing ops-friendly, high-performance, RESTful web services
 
+## Installing
+
+### Using *go get*
+
+    $ go get github.com/guregodevo/pastis
+
+After this command *pastis* is ready to use. Its source will be in:
+
+    $GOROOT/src/pkg/github.com/guregodevo/pastis
+
+You can use `go get -u -a` to update all installed packages.
 
 Getting Started
 ===============
