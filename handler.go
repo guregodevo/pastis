@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -22,12 +21,19 @@ type API struct {
 	mux    *http.ServeMux
 	chain  *FilterChain
 	router *Router
+	logger *Logger
 }
-
 
 // NewAPI allocates and returns a new API.
 func NewAPI() *API {
-	return &API{chain: &FilterChain{[]Filter{}, 0, nil}, mux : http.NewServeMux(), router: NewRouter()}
+	return &API{chain: &FilterChain{[]Filter{}, 0, nil}, mux : http.NewServeMux(), router: NewRouter(), logger: GetLogger("DEBUG")}
+}
+
+//SetOutput sets the output destination for the standard logger of the given level.
+//Example: api.SetOuput("ERROR", os.StdErr, log.Lmicroseconds)
+func (api *API) SetOuput(level string, w io.Writer, flag int) *Logger {
+	api.logger.SetOuput(level, w, flag)
+	return api.logger
 }
 
 func ErrorResponse(err error) interface{} {
@@ -37,8 +43,8 @@ func ErrorResponse(err error) interface{} {
 //Return an instance of http.HandlerFunc built from  a pair of request method and a callback value.
 //The first callback input parameter is the set of URL query and path parameters.
 //The second callback input parameter is the unmarshalled JSON body recieved from the request (if it exists).
-func handleMethodCall(urlValues url.Values, request *http.Request, methodRef reflect.Value) (int, interface{}) {
-	log.Println("DEBUG: handleMethodCall ", request.Method)
+func (api *API) handleMethodCall(urlValues url.Values, request *http.Request, methodRef reflect.Value) (int, interface{}) {
+	api.logger.Debugf("handleMethodCall %s", request.Method)
 	if methodRef.Kind() == reflect.Invalid {
 		return http.StatusNotImplemented, nil
 	}
@@ -46,16 +52,16 @@ func handleMethodCall(urlValues url.Values, request *http.Request, methodRef ref
 	methodType := methodRef.Type()
 	methodArgSize := methodRef.Type().NumIn()
 
-	log.Printf("DEBUG method has %v argument.", methodArgSize)
+	api.logger.Debugf("method has %d argument.", methodArgSize)
 	
 	if methodArgSize >= 3 {
-		log.Printf("ERROR: method %v cannot have more than 2 arguments\n", methodRef)
+		api.logger.Errorf("method %v cannot have more than 2 arguments", methodRef)
 		return http.StatusNotImplemented, nil
 	}
 	
 	if methodArgSize == 0 {
-		log.Printf("DEBUG method %v has no argument. Skip marshalling...\n", methodRef)
-		return handleReturn(methodRef, []reflect.Value{ })
+		api.logger.Errorf("method %v has no argument. Skip marshalling...", methodRef)
+		return api.handleReturn(methodRef, []reflect.Value{ })
 	}
 	
 	valueOfUrlValues := reflect.ValueOf(urlValues)
@@ -65,16 +71,16 @@ func handleMethodCall(urlValues url.Values, request *http.Request, methodRef ref
 
 	if methodArgSize == 1 {
 		if expectedJSONType == valueOfUrlValues.Type() {
-			log.Println("DEBUG method %v has one argument of type url.Values. Skip marshalling...")
-			return handleReturn(methodRef, methodParameterValues)			
+			api.logger.Debugf(" method has one argument of type url.Values. Skip marshalling...")
+			return api.handleReturn(methodRef, methodParameterValues)			
 		} else {
-			log.Println("DEBUG method %v has one argument of request body type. ")
+			api.logger.Debugf(" method %v has one argument of request body type. ", methodRef)
 			methodParameterValues = []reflect.Value{} // will add later the json body as parameter
 		}
 	} else if methodArgSize == 2 {
-		log.Printf("DEBUG method first argument is not the request body type.\n")
+		api.logger.Debug(" method first argument is not the request body type.\n")
 		expectedJSONType = methodType.In(1)
-		log.Printf("DEBUG method second argument is the request body type %v.\n", expectedJSONType)
+		api.logger.Debugf(" method second argument is the request body type %v.\n", expectedJSONType)
 	}
 
 	expectedJSONValue := reflect.New(expectedJSONType)
@@ -86,7 +92,7 @@ func handleMethodCall(urlValues url.Values, request *http.Request, methodRef ref
 		if err := dec.Decode(jsonInterface); err == io.EOF {
 			break
 		} else if err != nil {
-			log.Println("ERROR: unable to decode json blob. Check whether parameter type matches json type. \n")
+			api.logger.Error(" unable to decode json blob. Check whether parameter type matches json type. \n")
 			return http.StatusNotImplemented, nil
 		}
 	}
@@ -95,22 +101,22 @@ func handleMethodCall(urlValues url.Values, request *http.Request, methodRef ref
 	jsonValueType := jsonValue.Elem().Type()
 
 	if expectedJSONType.Kind() != jsonValue.Elem().Type().Kind() {
-		log.Println("ERROR: Unexpected JSON format. Should be of type '", expectedJSONType.Kind(), "' instead of ", jsonValueType.Kind())
+		api.logger.Errorf(" Unexpected JSON format. Should be of type '", expectedJSONType.Kind(), "' instead of ", jsonValueType.Kind())
 		return http.StatusNotImplemented, nil
 	} else if expectedJSONType != jsonValue.Type() {
 		methodParameterValues = append(methodParameterValues, jsonValue.Elem())
 	} else {
-		log.Println("ERROR: Parameter type mismatches json type. Expected JSON format. ", expectedJSONType)
+		api.logger.Errorf(" Parameter type mismatches json type. Expected JSON format. ", expectedJSONType)
 		return http.StatusNotImplemented, nil
 	}
-	return handleReturn(methodRef, methodParameterValues)
+	return api.handleReturn(methodRef, methodParameterValues)
 }
 
 //Return the array of Value converted into a tuple (int, interface {} )
-func handleReturn(methodRef reflect.Value, methodParameterValues []reflect.Value) (int, interface{}) {
+func (api *API) handleReturn(methodRef reflect.Value, methodParameterValues []reflect.Value) (int, interface{}) {
 	responseValues := methodRef.Call(methodParameterValues)
 	if len(responseValues) != 2 {
-		log.Println("ERROR: method %v does not return expected response (int, interface{}).", methodRef)
+		api.logger.Errorf(" method %v does not return expected response (int, interface{}).", methodRef)
 		return http.StatusNotImplemented, nil
 	}
 	//TODO Fix int conversion
@@ -123,19 +129,19 @@ func handleReturn(methodRef reflect.Value, methodParameterValues []reflect.Value
 func (api *API) methodHandler(pattern string, requestMethod string, fn reflect.Value) http.HandlerFunc {
 	return func(rw http.ResponseWriter, request *http.Request) {
 			
-		code, data := handleMethodCall(request.Form, request, fn)
+		code, data := api.handleMethodCall(request.Form, request, fn)
 		
-		handlerFuncReturn(code, data, rw)
+		api.handlerFuncReturn(code, data, rw)
 	}
 }
 
 //Utility method writing status code and data to the given response 
-func handlerFuncReturn(code int, data interface{}, rw http.ResponseWriter) {
-	log.Printf("DEBUG: handlerFuncReturn %v", code)
+func (api *API) handlerFuncReturn(code int, data interface{}, rw http.ResponseWriter) {
+	api.logger.Debugf(" handlerFuncReturn %v", code)
 
 	content, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("ERROR: handlerFuncReturn could not marshall content [%v]", data)
+		api.logger.Errorf(" handlerFuncReturn could not marshall content [%v]", data)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -167,7 +173,7 @@ func (api *API) AddResource(pattern string, resource interface{}) {
 			requestMethod = strings.ToUpper(requestMethod)
 			handler := api.methodHandler(pattern, requestMethod, methodRef)
 			api.addHandler(requestMethod, handler, pattern)
-			log.Printf("DEBUG: Added Resource [method={%v},pattern={%v}]", requestMethod, pattern)
+			api.logger.Debugf(" Added Resource [method={%v},pattern={%v}]", requestMethod, pattern)
 		}
 	}	
 }
@@ -176,7 +182,7 @@ func (api *API) AddResource(pattern string, resource interface{}) {
 func (api *API) Do(requestMethod string, pattern string, fn interface{}) {
 	handler := api.methodHandler(pattern, requestMethod, reflect.ValueOf(fn))
 	api.addHandler(requestMethod, handler, pattern)
-	log.Printf("DEBUG: Added Do [method={%v},pattern={%v}]", requestMethod, pattern)
+	api.logger.Debugf(" Added Do [method={%v},pattern={%v}]", requestMethod, pattern)
 }
 
 // Function callback paired with GET Method and URL-matching pattern. 
@@ -226,7 +232,7 @@ func (api *API) Delete(fn interface{}, pattern string) {
 
 // Function callback paired with a set of URL-matching pattern. 
 func (api *API) addHandler(method string, handler http.HandlerFunc, pattern string) {
-	log.Printf("DEBUG: Add Handle Func [pattern={%v}]", pattern)
+	api.logger.Debugf(" Add Handle Func [pattern={%v}]", pattern)
 	pathChain := api.chain.Copy()
 	pathChain.Target = handler
 	handlerFunc := pathChain.dispatchRequestHandler()
@@ -240,8 +246,8 @@ func (api *API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *API) HandleFunc() {
-	api.mux.HandleFunc("/", api.router.Handler())
-	api.router.OpsFriendLog()
+	api.mux.HandleFunc("/", api.router.Handler(api.logger))
+	api.router.OpsFriendLog(api.logger)
 }
 
 // Start causes the API to begin serving requests on the given port.
@@ -251,9 +257,9 @@ func (api *API) Start(port int) error {
 
 	err := http.ListenAndServe(portString, api.mux)
 	if (err != nil) {
-		log.Println("ERROR : could not start API")
+		api.logger.Info(" could not start API")
 		return err
 	}
-	log.Printf("INFO: API successfully started at port %d \n", port)
+	api.logger.Infof(" API successfully started at port %d \n", port)
 	return nil
 }

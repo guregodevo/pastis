@@ -1,17 +1,18 @@
 package pastis
 
-import "net/http"
-import "log"
-import "fmt"
-import "regexp"
+import (
+ "net/http"
+ "regexp"
+ "fmt"
+)
 
 type Router struct {
 	handlers map[string] map[string] http.HandlerFunc	
 }
 
 //Prints out the routes
-func (router *Router) OpsFriendLog() {
-	fmt.Println("API Routes")
+func (router *Router) OpsFriendLog(logger *Logger) {
+	fmt.Print("API Routes \n")
 	log := make(map[string][]string)
 
 	for method, _ := range router.handlers {
@@ -78,9 +79,9 @@ func HandlerPath(pattern string) string {
 	return pattern
 }
 
-func (router *Router) Handler() http.HandlerFunc {
+func (router *Router) Handler(logger *Logger) http.HandlerFunc {
 	return func(rw http.ResponseWriter, request *http.Request) {
-		log.Printf("DEBUG: router Handler [request=%v] ", request)
+		logger.Debugf("routing [request=%v]...", request)
 
 		if request.ParseForm() != nil {
 			rw.WriteHeader(http.StatusBadRequest)
@@ -91,7 +92,7 @@ func (router *Router) Handler() http.HandlerFunc {
 		for pattern := range handlersForPattern {
 			ok, params := Match(Regexp(pattern), request.URL.Path)
 			if (ok) {
-				log.Printf("Extract params : URL [%s] | Pattern [%s] \n", request.URL.Path, pattern)
+				logger.Debugf("Extracting params : URL [%s] | Pattern [%s] \n", request.URL.Path, pattern)
 				for key, _ := range params {
 					request.Form.Set(key,params[key])
 				}	
@@ -99,9 +100,7 @@ func (router *Router) Handler() http.HandlerFunc {
 				return		
 			}
 		}
-		log.Printf("DEBUG: No handler for [method=%v,url=%v] ", request.Method, request.URL.Path)
+		logger.Debugf("No handler found for [method=%s,url=%v] ", request.Method, request.URL.Path)
 		rw.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
-
-
