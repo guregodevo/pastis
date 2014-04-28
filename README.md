@@ -1,5 +1,5 @@
-pastis
-======
+#pastis [![GoDoc](https://godoc.org/github.com/guregodevo/pastis?status.png)](http://godoc.org/github.com/guregodevo/pastis)
+
 
 Go framework for developing ops-friendly RESTful web services
 
