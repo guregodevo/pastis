@@ -9,7 +9,7 @@ import (
 
 
 type Logger struct {
-  Level int
+  level int
   info *log.Logger
   debug *log.Logger
   fatal *log.Logger
@@ -18,8 +18,8 @@ type Logger struct {
 }
 
 const (
-	INFO = 1
-	DEBUG = 2
+	DEBUG = 1
+	INFO = 2
 	WARN = 3
 	ERROR = 4
 	FATAL = 5
@@ -66,7 +66,7 @@ func (logger *Logger) Switch(level int) *log.Logger {
 // The level defines the minimum set of levels recognized by the system, that is OFF, FATAL, ERROR, WARN, INFO, DEBUG and ALL.
 func GetLogger(level string) *Logger {
  	levelInt := LevelInt(level)
- 	pastisLogger := &Logger{ Level: levelInt }
+ 	pastisLogger := &Logger{ level: levelInt }
  	pastisLogger.info = nativeLogger(os.Stdout, "INFO", log.Ltime)
  	pastisLogger.debug = nativeLogger(os.Stdout, "DEBUG", log.Ltime)
 	pastisLogger.warn = nativeLogger(os.Stdout, "WARN", log.Ltime)
@@ -79,6 +79,10 @@ func nativeLogger(w io.Writer, prefix string, flag int) *log.Logger {
 	return log.New(w, fmt.Sprintf("%s: ", prefix), flag)
 }
 
+// Set the minimum set of levels recognized by the system, that is OFF, FATAL, ERROR, WARN, INFO, DEBUG and ALL.
+func (logger *Logger) SetLevel(level string) {
+	logger.level = LevelInt(level) 
+}
 
 //SetOutput sets the output destination for the standard logger.
 func (logger *Logger) SetOuput(level string, w io.Writer, flag int) {
@@ -100,14 +104,14 @@ func (logger *Logger) SetOuput(level string, w io.Writer, flag int) {
 
 //Log a message object with the given level. Arguments are handled in the manner of fmt.Println.
 func (logger *Logger) Trace(level int, s string) {
-	if (level <= logger.Level) {
+	if (level >= logger.level) {
 		logger.Switch(level).Print(s)		
 	}
 }
 
 //Log a message object with the given level. Arguments are handled in the manner of fmt.Printf.
 func (logger *Logger) TraceF(level int, format string, v ...interface{} ) {
-	if (level <= logger.Level) {
+	if (level >= logger.level) {
 		logger.Switch(level).Printf(format, v...)		
 	}
 }

@@ -1,7 +1,7 @@
 pastis
 ======
 
-Go framework for developing ops-friendly, high-performance, RESTful web services
+Go framework for developing ops-friendly RESTful web services
 
 ## Installing
 
@@ -198,7 +198,7 @@ Any filter can be added to apis
 
 ##CORS Support
 
-Pastis provides CORS filter. If you need it, just add the CORS filter to your api. 
+Pastis provides [CORS](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing) filter. If you need it, just add the CORS filter to your api.
 
 ```go
 	var api = pastis.NewAPI()
@@ -208,7 +208,7 @@ Pastis provides CORS filter. If you need it, just add the CORS filter to your ap
 
 ## Testing
 
-Pastis tests can be written using any testing library or framework. The native Go package httptest is recommended:
+Pastis tests can be written using any testing library or framework. The native Go package [httptest](http://golang.org/pkg/net/http/httptest/) is recommended:
 
 ```go
 import (
@@ -247,6 +247,34 @@ func Test_Callback_With_Params(t *testing.T) {
 }
 ```
 
+## Logging
 
+Pastis includes its own logging API. It allows the developer to control which log statements are output with arbitrary granularity. It is fully configurable at runtime.  
 
+Pastis Logger may be assigned levels. The set of possible levels, that is in ascending order:
+⋅⋅* DEBUG,
+⋅⋅* INFO,
+⋅⋅* WARN,
+⋅⋅* ERROR and
+⋅⋅* FATAL 
+
+The minimum set of levels recognized by the system, that is OFF, FATAL, ERROR, WARN, INFO and DEBUG corresponds to those levels whose order is equals or lower than the API logger level. 
+
+By default, API Logger level is "DEBUG" and the log output stream is [StdOut](http://golang.org/pkg/syscall/#Stdout).
+
+```go
+//main.go
+package main
+
+import "net/url"
+import "github.com/guregodevo/pastis"
+import "os"
+func main() {
+	api := pastis.NewAPI()
+	api.SetLevel("INFO")
+	api.SetOutput("ERROR", os.StdErr, log.Ltime)
+	//ERROR logs will now be printed out to the standard error stream
+	//Prefixed by ERROR and the time flag "ERROR 01:23:23" 
+}
+```
 
