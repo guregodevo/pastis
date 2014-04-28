@@ -1,13 +1,13 @@
 package pastis
 
 import (
- "net/http"
- "regexp"
- "fmt"
+	"fmt"
+	"net/http"
+	"regexp"
 )
 
 type Router struct {
-	handlers map[string] map[string] http.HandlerFunc	
+	handlers map[string]map[string]http.HandlerFunc
 }
 
 //Prints out the routes
@@ -17,29 +17,29 @@ func (router *Router) OpsFriendLog(logger *Logger) {
 
 	for method, _ := range router.handlers {
 		for pattern, _ := range router.handlers[method] {
-			log[pattern] = []string { method }
+			log[pattern] = []string{method}
 		}
 	}
 	for pattern := range log {
 		for _, method := range log[pattern] {
 			fmt.Printf(" %v %s \n", method, pattern)
 		}
-	}	
+	}
 }
 
 func NewRouter() *Router {
 	hs := make(map[string]map[string]http.HandlerFunc)
-	return &Router{ hs }
+	return &Router{hs}
 }
 
 func (router *Router) Add(pattern string, method string, handler http.HandlerFunc) {
 	if router.handlers[method] == nil {
-		router.handlers[method] = make(map[string] http.HandlerFunc)
+		router.handlers[method] = make(map[string]http.HandlerFunc)
 	}
 	router.handlers[method][pattern] = handler
 }
 
-//Build a regex based on the initial pattern 
+//Build a regex based on the initial pattern
 func Regexp(pattern string) *regexp.Regexp {
 	r := regexp.MustCompile(`:[^/#?()\.\\]+`)
 	pattern = r.ReplaceAllStringFunc(pattern, func(m string) string {
@@ -69,7 +69,7 @@ func Match(r *regexp.Regexp, path string) (bool, map[string]string) {
 	return false, nil
 }
 
-// HandlerPath returns the Server path 
+// HandlerPath returns the Server path
 func HandlerPath(pattern string) string {
 	reg := regexp.MustCompile("^/*[^:]*")
 	matches := reg.FindString(pattern)
@@ -91,13 +91,13 @@ func (router *Router) Handler(logger *Logger) http.HandlerFunc {
 
 		for pattern := range handlersForPattern {
 			ok, params := Match(Regexp(pattern), request.URL.Path)
-			if (ok) {
+			if ok {
 				logger.Debugf("Extracting params : URL [%s] | Pattern [%s] \n", request.URL.Path, pattern)
 				for key, _ := range params {
-					request.Form.Set(key,params[key])
-				}	
+					request.Form.Set(key, params[key])
+				}
 				handlersForPattern[pattern](rw, request)
-				return		
+				return
 			}
 		}
 		logger.Debugf("No handler found for [method=%s,url=%v] ", request.Method, request.URL.Path)

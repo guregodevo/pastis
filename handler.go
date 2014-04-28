@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"reflect"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 )
-
 
 // An API manages a group of resources by routing to requests
 // to the correct method on a matching resource and marshalling
@@ -26,7 +25,7 @@ type API struct {
 
 // NewAPI allocates and returns a new API.
 func NewAPI() *API {
-	return &API{chain: &FilterChain{[]Filter{}, 0, nil}, mux : http.NewServeMux(), router: NewRouter(), logger: GetLogger("DEBUG")}
+	return &API{chain: &FilterChain{[]Filter{}, 0, nil}, mux: http.NewServeMux(), router: NewRouter(), logger: GetLogger("DEBUG")}
 }
 
 //SetOutput sets the output destination for the standard logger of the given level.
@@ -53,17 +52,17 @@ func (api *API) handleMethodCall(urlValues url.Values, request *http.Request, me
 	methodArgSize := methodRef.Type().NumIn()
 
 	api.logger.Debugf("method has %d argument.", methodArgSize)
-	
+
 	if methodArgSize >= 3 {
 		api.logger.Errorf("method %v cannot have more than 2 arguments", methodRef)
 		return http.StatusNotImplemented, nil
 	}
-	
+
 	if methodArgSize == 0 {
 		api.logger.Errorf("method %v has no argument. Skip marshalling...", methodRef)
-		return api.handleReturn(methodRef, []reflect.Value{ })
+		return api.handleReturn(methodRef, []reflect.Value{})
 	}
-	
+
 	valueOfUrlValues := reflect.ValueOf(urlValues)
 	methodParameterValues := []reflect.Value{valueOfUrlValues}
 
@@ -72,7 +71,7 @@ func (api *API) handleMethodCall(urlValues url.Values, request *http.Request, me
 	if methodArgSize == 1 {
 		if expectedJSONType == valueOfUrlValues.Type() {
 			api.logger.Debugf(" method has one argument of type url.Values. Skip marshalling...")
-			return api.handleReturn(methodRef, methodParameterValues)			
+			return api.handleReturn(methodRef, methodParameterValues)
 		} else {
 			api.logger.Debugf(" method %v has one argument of request body type. ", methodRef)
 			methodParameterValues = []reflect.Value{} // will add later the json body as parameter
@@ -128,14 +127,14 @@ func (api *API) handleReturn(methodRef reflect.Value, methodParameterValues []re
 //The second callback input parameter is the unmarshalled JSON body recieved from the request (if it exists).
 func (api *API) methodHandler(pattern string, requestMethod string, fn reflect.Value) http.HandlerFunc {
 	return func(rw http.ResponseWriter, request *http.Request) {
-			
+
 		code, data := api.handleMethodCall(request.Form, request, fn)
-		
+
 		api.handlerFuncReturn(code, data, rw)
 	}
 }
 
-//Utility method writing status code and data to the given response 
+//Utility method writing status code and data to the given response
 func (api *API) handlerFuncReturn(code int, data interface{}, rw http.ResponseWriter) {
 	api.logger.Debugf(" handlerFuncReturn %v", code)
 
@@ -166,7 +165,7 @@ func (api *API) AddFilter(filter Filter) {
 // requests that match the given path to its HTTP
 // method on the resource.
 func (api *API) AddResource(pattern string, resource interface{}) {
-	methods := []string {"GET","Get", "Put", "PUT","Post", "POST","Patch", "PATCH","DELETE","Delete","Options","OPTIONS"}
+	methods := []string{"GET", "Get", "Put", "PUT", "Post", "POST", "Patch", "PATCH", "DELETE", "Delete", "Options", "OPTIONS"}
 	for _, requestMethod := range methods {
 		methodRef := reflect.ValueOf(resource).MethodByName(requestMethod)
 		if methodRef.Kind() != reflect.Invalid {
@@ -175,62 +174,62 @@ func (api *API) AddResource(pattern string, resource interface{}) {
 			api.addHandler(requestMethod, handler, pattern)
 			api.logger.Debugf(" Added Resource [method={%v},pattern={%v}]", requestMethod, pattern)
 		}
-	}	
+	}
 }
 
-// Function callback paired with a request Method and URL-matching pattern. 
+// Function callback paired with a request Method and URL-matching pattern.
 func (api *API) Do(requestMethod string, pattern string, fn interface{}) {
 	handler := api.methodHandler(pattern, requestMethod, reflect.ValueOf(fn))
 	api.addHandler(requestMethod, handler, pattern)
 	api.logger.Debugf(" Added Do [method={%v},pattern={%v}]", requestMethod, pattern)
 }
 
-// Function callback paired with GET Method and URL-matching pattern. 
+// Function callback paired with GET Method and URL-matching pattern.
 func (api *API) Get(pattern string, fn interface{}) {
 	api.Do("GET", pattern, fn)
 }
 
-// Function callback paired with PATH Method and URL-matching pattern. 
+// Function callback paired with PATH Method and URL-matching pattern.
 func (api *API) Patch(pattern string, fn interface{}) {
 	api.Do("PATCH", pattern, fn)
 }
 
-// Function callback paired with OPTIONS Method and URL-matching pattern. 
+// Function callback paired with OPTIONS Method and URL-matching pattern.
 func (api *API) Options(pattern string, fn interface{}) {
 	api.Do("OPTIONS", pattern, fn)
 }
 
-// Function callback paired with HEAD Method and URL-matching pattern. 
+// Function callback paired with HEAD Method and URL-matching pattern.
 func (api *API) Head(pattern string, fn interface{}) {
 	api.Do("HEAD", pattern, fn)
 }
 
-// Function callback paired with POST Method and URL-matching pattern. 
+// Function callback paired with POST Method and URL-matching pattern.
 func (api *API) Post(pattern string, fn interface{}) {
 	api.Do("POST", pattern, fn)
 }
 
-// Function callback paired with LINK Method and URL-matching pattern. 
+// Function callback paired with LINK Method and URL-matching pattern.
 func (api *API) Link(pattern string, fn interface{}) {
 	api.Do("LINK", pattern, fn)
 }
 
-// Function callback paired with UNLINK Method and URL-matching pattern. 
+// Function callback paired with UNLINK Method and URL-matching pattern.
 func (api *API) Unlink(pattern string, fn interface{}) {
 	api.Do("UNLINK", pattern, fn)
 }
 
-// Function callback paired with PUT Method and URL-matching pattern. 
+// Function callback paired with PUT Method and URL-matching pattern.
 func (api *API) Put(pattern string, fn interface{}) {
 	api.Do("PUT", pattern, fn)
 }
 
-// Function callback paired with DELETE Method and URL-matching pattern. 
+// Function callback paired with DELETE Method and URL-matching pattern.
 func (api *API) Delete(fn interface{}, pattern string) {
 	api.Do("DELETE", pattern, fn)
 }
 
-// Function callback paired with a set of URL-matching pattern. 
+// Function callback paired with a set of URL-matching pattern.
 func (api *API) addHandler(method string, handler http.HandlerFunc, pattern string) {
 	api.logger.Debugf(" Add Handle Func [pattern={%v}]", pattern)
 	pathChain := api.chain.Copy()
@@ -256,7 +255,7 @@ func (api *API) Start(port int) error {
 	portString := fmt.Sprintf(":%d", port)
 
 	err := http.ListenAndServe(portString, api.mux)
-	if (err != nil) {
+	if err != nil {
 		api.logger.Info(" could not start API")
 		return err
 	}

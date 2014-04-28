@@ -1,78 +1,76 @@
 package pastis
 
 import (
-	"log"
 	"fmt"
-	"os"
 	"io"
+	"log"
+	"os"
 )
 
-
 type Logger struct {
-  level int
-  info *log.Logger
-  debug *log.Logger
-  fatal *log.Logger
-  warn *log.Logger
-  err *log.Logger
+	level int
+	info  *log.Logger
+	debug *log.Logger
+	fatal *log.Logger
+	warn  *log.Logger
+	err   *log.Logger
 }
 
 const (
 	DEBUG = 1
-	INFO = 2
-	WARN = 3
+	INFO  = 2
+	WARN  = 3
 	ERROR = 4
 	FATAL = 5
-	OFF = 6	
+	OFF   = 6
 )
 
 func LevelInt(level string) int {
 	switch {
-    case "INFO" == level :
-        return INFO
-    case "DEBUG" == level :
-        return DEBUG
-    case "WARN" == level :
-        return WARN
-    case "ERROR" == level :
-        return ERROR
-    case "FATAL" == level :
-        return FATAL
-    case "OFF" == level :
-        return OFF
+	case "INFO" == level:
+		return INFO
+	case "DEBUG" == level:
+		return DEBUG
+	case "WARN" == level:
+		return WARN
+	case "ERROR" == level:
+		return ERROR
+	case "FATAL" == level:
+		return FATAL
+	case "OFF" == level:
+		return OFF
 	}
-    return OFF	
+	return OFF
 }
 
 func (logger *Logger) Switch(level int) *log.Logger {
 	switch {
-    case INFO == level :
-        return logger.info
-    case DEBUG == level :
-        return logger.debug
-    case WARN == level :
-        return logger.warn
-    case ERROR == level :
-        return logger.err
-    case FATAL == level :
-        return logger.fatal
-    default :
-        return nil
+	case INFO == level:
+		return logger.info
+	case DEBUG == level:
+		return logger.debug
+	case WARN == level:
+		return logger.warn
+	case ERROR == level:
+		return logger.err
+	case FATAL == level:
+		return logger.fatal
+	default:
+		return nil
 	}
 }
-
 
 // Retrieve a logger having the given level.
 // The level defines the minimum set of levels recognized by the system, that is OFF, FATAL, ERROR, WARN, INFO, DEBUG and ALL.
 func GetLogger(level string) *Logger {
- 	levelInt := LevelInt(level)
- 	pastisLogger := &Logger{ level: levelInt }
- 	pastisLogger.info = nativeLogger(os.Stdout, "INFO", log.Ltime)
- 	pastisLogger.debug = nativeLogger(os.Stdout, "DEBUG", log.Ltime)
+	levelInt := LevelInt(level)
+	pastisLogger := &Logger{level: levelInt}
+	pastisLogger.info = nativeLogger(os.Stdout, "INFO", log.Ltime)
+	pastisLogger.debug = nativeLogger(os.Stdout, "DEBUG", log.Ltime)
 	pastisLogger.warn = nativeLogger(os.Stdout, "WARN", log.Ltime)
 	pastisLogger.err = nativeLogger(os.Stdout, "ERROR", log.Ltime)
 	pastisLogger.fatal = nativeLogger(os.Stdout, "FATAL", log.Ltime)
- 	return pastisLogger
+	return pastisLogger
 }
 
 func nativeLogger(w io.Writer, prefix string, flag int) *log.Logger {
@@ -81,38 +79,38 @@ func nativeLogger(w io.Writer, prefix string, flag int) *log.Logger {
 
 // Set the minimum set of levels recognized by the system, that is OFF, FATAL, ERROR, WARN, INFO, DEBUG and ALL.
 func (logger *Logger) SetLevel(level string) {
-	logger.level = LevelInt(level) 
+	logger.level = LevelInt(level)
 }
 
 //SetOutput sets the output destination for the standard logger.
 func (logger *Logger) SetOuput(level string, w io.Writer, flag int) {
 	levelNum := LevelInt(level)
 	switch {
-    case INFO == levelNum :
-        logger.info = nativeLogger(w, level, flag)
-    case DEBUG == levelNum :
-        logger.debug = nativeLogger(w, level, flag)
-    case WARN == levelNum :
-        logger.warn = nativeLogger(w, level, flag)
-    case ERROR == levelNum :
-        logger.err = nativeLogger(w, level, flag)
-    case FATAL == levelNum :
-        logger.fatal = nativeLogger(w, level, flag)
-    default :
-	}		
+	case INFO == levelNum:
+		logger.info = nativeLogger(w, level, flag)
+	case DEBUG == levelNum:
+		logger.debug = nativeLogger(w, level, flag)
+	case WARN == levelNum:
+		logger.warn = nativeLogger(w, level, flag)
+	case ERROR == levelNum:
+		logger.err = nativeLogger(w, level, flag)
+	case FATAL == levelNum:
+		logger.fatal = nativeLogger(w, level, flag)
+	default:
+	}
 }
 
 //Log a message object with the given level. Arguments are handled in the manner of fmt.Println.
 func (logger *Logger) Trace(level int, s string) {
-	if (level >= logger.level) {
-		logger.Switch(level).Print(s)		
+	if level >= logger.level {
+		logger.Switch(level).Print(s)
 	}
 }
 
 //Log a message object with the given level. Arguments are handled in the manner of fmt.Printf.
-func (logger *Logger) TraceF(level int, format string, v ...interface{} ) {
-	if (level >= logger.level) {
-		logger.Switch(level).Printf(format, v...)		
+func (logger *Logger) TraceF(level int, format string, v ...interface{}) {
+	if level >= logger.level {
+		logger.Switch(level).Printf(format, v...)
 	}
 }
 
@@ -122,17 +120,17 @@ func (logger *Logger) Info(s string) {
 }
 
 //Log a message object with the DEBUG level. Arguments are handled in the manner of fmt.Print.
-func (logger *Logger) Debug(s string ) {
+func (logger *Logger) Debug(s string) {
 	logger.Trace(DEBUG, s)
 }
 
 //Log a message object with the ERROR level. Arguments are handled in the manner of fmt.Print.
-func (logger *Logger) Error(s string ) {
+func (logger *Logger) Error(s string) {
 	logger.Trace(ERROR, s)
 }
 
 //Log a message object with the FATAL level. Arguments are handled in the manner of fmt.Print.
-func (logger *Logger) Fatal(s string ) {
+func (logger *Logger) Fatal(s string) {
 	logger.Trace(FATAL, s)
 }
 
@@ -142,26 +140,26 @@ func (logger *Logger) Warn(s string) {
 }
 
 //Log a message object with the INFO level. Arguments are handled in the manner of fmt.Printf.
-func (logger *Logger) Infof(format string, v ...interface{} ) {
+func (logger *Logger) Infof(format string, v ...interface{}) {
 	logger.TraceF(INFO, format, v...)
 }
 
 //Log a message object with the DEBUG level. Arguments are handled in the manner of fmt.Printf.
-func (logger *Logger) Debugf(format string, v ...interface{} ) {
+func (logger *Logger) Debugf(format string, v ...interface{}) {
 	logger.TraceF(DEBUG, format, v...)
 }
 
 //Log a message object with the ERROR level. Arguments are handled in the manner of fmt.Printf.
-func (logger *Logger) Errorf(format string, v ...interface{} ) {
+func (logger *Logger) Errorf(format string, v ...interface{}) {
 	logger.TraceF(ERROR, format, v...)
 }
 
 //Log a message object with the FATAL level. Arguments are handled in the manner of fmt.Printf.
-func (logger *Logger) Fatalf(format string, v ...interface{} ) {
+func (logger *Logger) Fatalf(format string, v ...interface{}) {
 	logger.TraceF(FATAL, format, v...)
 }
 
 //Log a message object with the WARN level. Arguments are handled in the manner of fmt.Printf.
-func (logger *Logger) Warnf(format string, v ...interface{} ) {
+func (logger *Logger) Warnf(format string, v ...interface{}) {
 	logger.TraceF(WARN, format, v...)
 }

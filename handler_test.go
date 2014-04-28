@@ -2,12 +2,12 @@ package pastis
 
 import (
 	"bytes"
-	"log"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
-	"encoding/json"
-	"io/ioutil"
 	"net/url"
 	"testing"
 )
@@ -26,7 +26,6 @@ func assert_Foo_Response(t *testing.T, res *http.Response, expectedStatusCode in
 	}
 	expect(t, f, expectedResponsebody)
 }
-
 
 func Test_NewAPI(t *testing.T) {
 	m := NewAPI()
@@ -72,8 +71,6 @@ func Test_Pastis_Resource_Handler(t *testing.T) {
 	assert_Foo_Response(t, res, http.StatusOK, Foo{"name", 1})
 }
 
-
-
 func Test_Pastis_Nested_Resource_Handler(t *testing.T) {
 	resource := new(FooResource)
 	nestedresource := new(NestedFooResource)
@@ -96,7 +93,7 @@ func Test_Pastis_Nested_Resource_Handler(t *testing.T) {
 
 func Test_Pastis_Callback_Parameter_Free(t *testing.T) {
 	p := NewAPI()
-	p.Get( "/hello/", func() (int, interface{}) {
+	p.Get("/hello/", func() (int, interface{}) {
 		return http.StatusOK, nil
 	})
 	p.HandleFunc()
@@ -108,16 +105,15 @@ func Test_Pastis_Callback_Parameter_Free(t *testing.T) {
 	res, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
-	}	
+	}
 	expect(t, res.StatusCode, http.StatusOK)
 }
 
-
 func Test_Pastis_Callback_URL_Params(t *testing.T) {
 	p := NewAPI()
-	p.Get( "/hello/:name", func(params url.Values) (int, interface{}) {
-		fmt.Printf("Name : %v",params.Get("name"))
-		return http.StatusOK, Foo { params.Get("name"), 1 }
+	p.Get("/hello/:name", func(params url.Values) (int, interface{}) {
+		fmt.Printf("Name : %v", params.Get("name"))
+		return http.StatusOK, Foo{params.Get("name"), 1}
 	})
 	p.HandleFunc()
 
@@ -155,7 +151,7 @@ func Test_Pastis_Callback_Handler(t *testing.T) {
 
 func Test_Pastis_Callback_Having_Input_Handler(t *testing.T) {
 	p := NewAPI()
-	p.Post( "/foo", func(vals url.Values, input Foo) (int, interface{}) {
+	p.Post("/foo", func(vals url.Values, input Foo) (int, interface{}) {
 		return http.StatusOK, input
 	})
 	p.HandleFunc()
@@ -170,7 +166,7 @@ func Test_Pastis_Callback_Having_Input_Handler(t *testing.T) {
 	url := ts.URL + "/foo"
 	res, err := http.Post(url, "application/json", body)
 	if err != nil {
-		fmt.Printf("Post : %v",err)
+		fmt.Printf("Post : %v", err)
 		log.Fatal(err)
 	}
 	assert_Foo_Response(t, res, http.StatusOK, foo)
