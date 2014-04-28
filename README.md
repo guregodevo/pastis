@@ -252,11 +252,11 @@ func Test_Callback_With_Params(t *testing.T) {
 Pastis includes its own logging API. It allows the developer to control which log statements are output with arbitrary granularity. It is fully configurable at runtime.  
 
 Pastis Logger may be assigned levels. The set of possible levels, that is in ascending order:
-⋅⋅* DEBUG,
-⋅⋅* INFO,
-⋅⋅* WARN,
-⋅⋅* ERROR and
-⋅⋅* FATAL 
+  * DEBUG,
+  * INFO,
+  * WARN,
+  * ERROR and
+  * FATAL 
 
 The minimum set of levels recognized by the system, that is OFF, FATAL, ERROR, WARN, INFO and DEBUG corresponds to those levels whose order is equals or lower than the API logger level. 
 
@@ -275,6 +275,34 @@ func main() {
 	api.SetOutput("ERROR", os.StdErr, log.Ltime)
 	//ERROR logs will now be printed out to the standard error stream
 	//Prefixed by ERROR and the time flag "ERROR 01:23:23" 
+}
+```
+
+## JSON
+
+Pastis speaks JSON. In terms of data formats, JSON has become the web’s lingua franca, and the package [encoding/json](http://golang.org/pkg/encoding/json/) is the king of JSON in the Go programming language. In addition to being lightning fast, it has a sophisticated mashaller, allowing you to use type safe parameter when recieving request content.
+
+In the example below, the body content of the request is fully decoded using the Go JSON decoder. Pastis takes care of detecting the parameter type and unmarshalling the request body.  
+
+```go
+//main.go
+package main
+
+import "net/url"
+import "github.com/guregodevo/pastis"
+import "fmt"
+
+type Foo struct {
+	Name string
+	Order int	
+}
+
+func main() {
+	api := pastis.NewAPI()
+	api.Post( "/foo", func(vals url.Values, body Foo) (int, interface{}) {
+		fmpt.Printf("Here is the request body %v ", foo)
+		return http.StatusOK, body
+	})
 }
 ```
 
