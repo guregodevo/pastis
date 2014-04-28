@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+//An API Logger whose level is configurable
 type Logger struct {
 	level int
 	info  *log.Logger
@@ -25,6 +26,7 @@ const (
 	OFF   = 6
 )
 
+//Level converts a strong value of a level into into its integer value
 func LevelInt(level string) int {
 	switch {
 	case "INFO" == level:
@@ -43,6 +45,7 @@ func LevelInt(level string) int {
 	return OFF
 }
 
+//Switch returns the logger matching the given level 
 func (logger *Logger) Switch(level int) *log.Logger {
 	switch {
 	case INFO == level:
@@ -60,7 +63,7 @@ func (logger *Logger) Switch(level int) *log.Logger {
 	}
 }
 
-// Retrieve a logger having the given level.
+// GetLogger retrieves a logger having the given level.
 // The level defines the minimum set of levels recognized by the system, that is OFF, FATAL, ERROR, WARN, INFO, DEBUG and ALL.
 func GetLogger(level string) *Logger {
 	levelInt := LevelInt(level)
