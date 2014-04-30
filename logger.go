@@ -39,10 +39,8 @@ func LevelInt(level string) int {
 		return ERROR
 	case "FATAL" == level:
 		return FATAL
-	case "OFF" == level:
-		return OFF
 	}
-	return OFF
+	return OFF  //default level
 }
 
 //Switch returns the logger matching the given level 
@@ -103,66 +101,72 @@ func (logger *Logger) SetOuput(level string, w io.Writer, flag int) {
 	}
 }
 
-//Log a message object with the given level. Arguments are handled in the manner of fmt.Println.
-func (logger *Logger) Trace(level int, s string) {
-	if level >= logger.level {
-		logger.Switch(level).Print(s)
-	}
-}
-
-//Log a message object with the given level. Arguments are handled in the manner of fmt.Printf.
-func (logger *Logger) TraceF(level int, format string, v ...interface{}) {
-	if level >= logger.level {
-		logger.Switch(level).Printf(format, v...)
-	}
-}
-
 //Log a message object with the INFO level. Arguments are handled in the manner of fmt.Print.
 func (logger *Logger) Info(s string) {
-	logger.Trace(INFO, s)
+	if INFO >= logger.level {
+		logger.info.Print(s)
+	}
 }
 
 //Log a message object with the DEBUG level. Arguments are handled in the manner of fmt.Print.
 func (logger *Logger) Debug(s string) {
-	logger.Trace(DEBUG, s)
+	if DEBUG >= logger.level {
+		logger.debug.Print(s)
+	}
 }
 
 //Log a message object with the ERROR level. Arguments are handled in the manner of fmt.Print.
 func (logger *Logger) Error(s string) {
-	logger.Trace(ERROR, s)
+	if ERROR >= logger.level {
+		logger.err.Print(s)
+	}
 }
 
 //Log a message object with the FATAL level. Arguments are handled in the manner of fmt.Print.
 func (logger *Logger) Fatal(s string) {
-	logger.Trace(FATAL, s)
+	if FATAL >= logger.level {
+		logger.fatal.Print(s)
+	}
 }
 
 //Log a message object with the WARN level. Arguments are handled in the manner of fmt.Print.
 func (logger *Logger) Warn(s string) {
-	logger.Trace(WARN, s)
+	if WARN >= logger.level {
+		logger.warn.Print(s)
+	}
 }
 
 //Log a message object with the INFO level. Arguments are handled in the manner of fmt.Printf.
 func (logger *Logger) Infof(format string, v ...interface{}) {
-	logger.TraceF(INFO, format, v...)
+	if INFO >= logger.level {
+		logger.info.Printf(format, v...)
+	}	
 }
 
 //Log a message object with the DEBUG level. Arguments are handled in the manner of fmt.Printf.
 func (logger *Logger) Debugf(format string, v ...interface{}) {
-	logger.TraceF(DEBUG, format, v...)
+	if DEBUG >= logger.level {
+		logger.debug.Printf(format, v...)
+	}	
 }
 
 //Log a message object with the ERROR level. Arguments are handled in the manner of fmt.Printf.
 func (logger *Logger) Errorf(format string, v ...interface{}) {
-	logger.TraceF(ERROR, format, v...)
+	if ERROR >= logger.level {
+		logger.err.Printf(format, v...)
+	}	
 }
 
 //Log a message object with the FATAL level. Arguments are handled in the manner of fmt.Printf.
 func (logger *Logger) Fatalf(format string, v ...interface{}) {
-	logger.TraceF(FATAL, format, v...)
+	if FATAL >= logger.level {
+		logger.fatal.Printf(format, v...)
+	}
 }
 
 //Log a message object with the WARN level. Arguments are handled in the manner of fmt.Printf.
 func (logger *Logger) Warnf(format string, v ...interface{}) {
-	logger.TraceF(WARN, format, v...)
+	if WARN >= logger.level {
+		logger.warn.Printf(format, v...)
+	}
 }

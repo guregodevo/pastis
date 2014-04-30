@@ -10,7 +10,27 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"reflect"
 )
+
+
+/* Test Helpers */
+func expect(t *testing.T, a interface{}, b interface{}) {
+	if a != b {
+		t.Errorf("Expected %v (type %v) - Got %v (type %v)", b, reflect.TypeOf(b), a, reflect.TypeOf(a))
+	}
+}
+
+func refute(t *testing.T, a interface{}, b interface{}) {
+	if a == b {
+		t.Errorf("Did not expect %v (type %v) - Got %v (type %v)", b, reflect.TypeOf(b), a, reflect.TypeOf(a))
+	}
+}
+
+type Foo struct {
+	Name  string
+	Order int
+}
 
 func assert_Foo_Response(t *testing.T, res *http.Response, expectedStatusCode int, expectedResponsebody interface{}) {
 	expect(t, res.StatusCode, expectedStatusCode)

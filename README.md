@@ -256,7 +256,8 @@ Pastis Logger may be assigned  a minimum level. The set of possible levels, in a
   * INFO,
   * WARN,
   * ERROR and
-  * FATAL 
+  * FATAL
+  * OFF
 
 A logger minimum level enables any log message whose level order is equals or lower. 
 
