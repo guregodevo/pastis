@@ -3,22 +3,10 @@
 
 Go framework for developing ops-friendly RESTful web services
 
-## Installing
-
-### Using *go get*
-
-    $ go get github.com/guregodevo/pastis
-
-After this command *pastis* is ready to use. Its source will be in:
-
-    $GOROOT/src/pkg/github.com/guregodevo/pastis
-
-You can use `go get -u -a` to update all installed packages.
-
 Getting Started
 ===============
 
-Pastis is a framework for quickly creating RESTful applications with minimal effort: 
+Pastis is a framework for creating RESTful web services with minimal effort: 
 
 ##Quick Example
 
@@ -45,6 +33,18 @@ go run main.go
 ```
 
 View at: http://localhost:4567/foo
+
+## Installing
+
+### Using *go get*
+
+    $ go get github.com/guregodevo/pastis
+
+After this command *pastis* is ready to use. Its source will be in:
+
+    $GOROOT/src/pkg/github.com/guregodevo/pastis
+
+You can use `go get -u -a` to update all installed packages.
 
 ##Routes
 
@@ -84,9 +84,9 @@ Each route is associated with a callback function:
 
 Routes are matched in the order they are defined. The first route that matches the request is invoked.
 
-In Pastis, query or path parameters are both accessible via the optional callback parameter of type url.Values. Note that this parameter is optional and there must be at most one of this type among the callback input parameters. By convention, it must be declared before any other callback parameter.
+In Pastis, query or path parameters are both accessible via the optional callback parameter of type *url.Values*.
 
-Route patterns may include named parameters:
+Route patterns may include **named parameters:
 
 ```go
 	api.Get("/posts/:title", func(params url.Values) (int, interface{}) {
@@ -95,7 +95,7 @@ Route patterns may include named parameters:
 	})
 ```
 
-Routes may also utilize query parameters:
+Routes may also utilize **query parameters:
 
 ```go
 	api.Get("/posts", func(params url.Values) (int, interface{}) {
@@ -106,16 +106,16 @@ Routes may also utilize query parameters:
 	})
 ```
 
-Routes may require the request body. In Pastis, the request body is decoded to the type of the callback parameter that you declared as input parameter in the callback. Any parameter that has a type different from url.Values will match the request body content provided that it can be represented as valid JSON. 
+Routes may require the *request body*. In Pastis, the request body is decoded to the type of the callback parameter that you declared as input parameter in the callback. Any parameter that has a type different from *url.Values* will match the request body content provided that it can be represented as valid JSON. 
 
 Possible request body parameter can be any of the following types: 
- * map[string]interface{}  or struct (those that begin with uppercase letter) for JSON Objects
- * []interface{}  for JSON arrays
- * Any Go type that matches the body content that is more convenient that the type above (int, string etc..)
+ * *map[string]interface{}*  or struct (those that begin with uppercase letter) for JSON Objects
+ * *[]interface{}*  for JSON arrays
+ * Any Go primitive type that matches the body content that is more convenient that the type above (int, string etc..)
 
 ##Return Values
 
-Every callback execution should end up returning a tuple (int, interface{}). The tuple element of type int represents the HTTP status code. The other one of type interface{} represents the response content. The return handler will take care of marshalling this content into JSON.
+Every callback execution should end up returning a tuple *(int, interface{})*. The tuple element of type int represents the HTTP status code. The other one of type *interface{}* represents the response content. The return handler will take care of marshalling this content into JSON.
 
 Examples:
 ```go
@@ -127,7 +127,7 @@ Examples:
 
 ##Resources
 
-In Pastis, a resource is any Go struct that implements one of the HTTP method. 
+In Pastis, a resource is any Go *struct* that implements HTTP methods (GET, PUT etc..). 
 
 ```go
 type DashboardResource struct {
@@ -141,16 +141,16 @@ type Chart struct {
 	Order int
 }
 
-func (api DashboardResource) GET(params url.Values) (int, interface{}) {
+func (api DashboardResource) Get(params url.Values) (int, interface{}) {
 	...do something with params params.Get("dashboardid")	
 	return http.StatusOK, [] Chart{Chart{"name", 1},Chart{"name", 1}}
 }
 
-func (api ChartResource) GET(params url.Values) (int, interface{}) {
+func (api ChartResource) Get(params url.Values) (int, interface{}) {
 	return http.StatusOK, Chart{params.Get("chartid"), 2}
 }
 
-func (api ChartResource) PUT(params url.Values) (int, interface{}) {
+func (api ChartResource) Put(params url.Values) (int, interface{}) {
 	...do something with params params.Get("chartid")
 }
 ```
@@ -166,7 +166,7 @@ api.AddResource("/dashboards/:dashboardid/charts/:chartid", chartResource )
 api.Start(44444)
 ```
 
-In the above example, the chart resource PUT method matches the HTTP method "PUT" and the resource URL  "/dashboards/:dashboardid/charts/:chartid". 
+In the above example, the chart resource *Put* method matches the HTTP method "PUT" and the resource URL  "/dashboards/:dashboardid/charts/:chartid". 
 
 Resource method functions behave exactly like callback method except that they match the resource route.
 
@@ -251,16 +251,16 @@ func Test_Callback_With_Params(t *testing.T) {
 
 Pastis includes its own logging API. It allows the developer to control which log statements are output with arbitrary granularity. It is fully configurable at runtime.  
 
-Pastis Logger may be assigned levels. The set of possible levels, that is in ascending order:
+Pastis Logger may be assigned  a minimum level. The set of possible levels, in ascending order is:
   * DEBUG,
   * INFO,
   * WARN,
   * ERROR and
   * FATAL 
 
-The minimum set of levels recognized by the system, that is OFF, FATAL, ERROR, WARN, INFO and DEBUG corresponds to those levels whose order is equals or lower than the API logger level. 
+A logger minimum level enables any log message whose level order is equals or lower. 
 
-By default, API Logger level is "DEBUG" and the log output stream is [StdOut](http://golang.org/pkg/syscall/#Stdout).
+By default, this API Logger level is "DEBUG" and the log output stream is [StdOut](http://golang.org/pkg/syscall/#Stdout).
 
 ```go
 //main.go
@@ -280,9 +280,9 @@ func main() {
 
 ## JSON
 
-Pastis speaks JSON. In terms of data formats, JSON has become the web’s lingua franca, and the package [encoding/json](http://golang.org/pkg/encoding/json/) is the king of JSON in the Go programming language. In addition to being lightning fast, it has a sophisticated mashaller, allowing you to use type safe parameter when recieving request content.
+Pastis speaks JSON. In terms of data formats, JSON has become mainstream, and the package [encoding/json](http://golang.org/pkg/encoding/json/) is fairly robust in the Go programming language. In addition to being lightning fast, it has a sophisticated mashaller, allowing you to use type safe parameter when recieving request content.
 
-In the example below, the body content of the request is fully decoded using the Go JSON decoder. Pastis takes care of detecting the parameter type and unmarshalling the request body.  
+In the example below, the body content of the request is fully decoded using the Go JSON decoder. Pastis just takes care of detecting the parameter type and unmarshalling it.  
 
 ```go
 //main.go
