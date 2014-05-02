@@ -43,34 +43,16 @@ func LevelInt(level string) int {
 	return OFF  //default level
 }
 
-//Switch returns the logger matching the given level 
-func (logger *Logger) Switch(level int) *log.Logger {
-	switch {
-	case INFO == level:
-		return logger.info
-	case DEBUG == level:
-		return logger.debug
-	case WARN == level:
-		return logger.warn
-	case ERROR == level:
-		return logger.err
-	case FATAL == level:
-		return logger.fatal
-	default:
-		return nil
-	}
-}
-
 // GetLogger retrieves a logger having the given level.
 // The level defines the minimum set of levels recognized by the system, that is OFF, FATAL, ERROR, WARN, INFO, DEBUG and ALL.
 func GetLogger(level string) *Logger {
 	levelInt := LevelInt(level)
 	pastisLogger := &Logger{level: levelInt}
-	pastisLogger.info = nativeLogger(os.Stdout, "INFO", log.Ltime)
-	pastisLogger.debug = nativeLogger(os.Stdout, "DEBUG", log.Ltime)
-	pastisLogger.warn = nativeLogger(os.Stdout, "WARN", log.Ltime)
-	pastisLogger.err = nativeLogger(os.Stdout, "ERROR", log.Ltime)
-	pastisLogger.fatal = nativeLogger(os.Stdout, "FATAL", log.Ltime)
+	pastisLogger.info = nativeLogger(os.Stdout, "INFO", log.Ldate|log.Ltime|log.Lshortfile)
+	pastisLogger.debug = nativeLogger(os.Stdout, "DEBUG", log.Ldate|log.Ltime|log.Lshortfile)
+	pastisLogger.warn = nativeLogger(os.Stdout, "WARN", log.Ldate|log.Ltime|log.Lshortfile)
+	pastisLogger.err = nativeLogger(os.Stdout, "ERROR", log.Ldate|log.Ltime|log.Lshortfile)
+	pastisLogger.fatal = nativeLogger(os.Stdout, "FATAL", log.Ldate|log.Ltime|log.Lshortfile)
 	return pastisLogger
 }
 
@@ -83,7 +65,15 @@ func (logger *Logger) SetLevel(level string) {
 	logger.level = LevelInt(level)
 }
 
-//SetOutput sets the output destination for the standard logger.
+//SetOutput sets the output destination for the logger having the given level.
+func (logger *Logger) SetOuputs(w io.Writer, flag int, levels ...string) {
+	for _, l := range levels {
+		logger.SetOuput(l, w, flag)
+	}
+}
+
+
+//SetOutput sets the output destination for the logger having the given level.
 func (logger *Logger) SetOuput(level string, w io.Writer, flag int) {
 	levelNum := LevelInt(level)
 	switch {

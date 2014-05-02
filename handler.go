@@ -1,13 +1,9 @@
 //Package pastis implements a simple library for building RESTful APIs.
 //This package provides you with everything you will need for most of your applications.
 //Pastis has 3 building blocks : 
-
 // 1) An API associated to a set of Resource and callback functions. It is paired with an arbitrary port.
-
 // 2) Resource paired with an URL-pattern. Its represents a REST resource.
-
 // 3) A callback paired with a URL-pattern and a request method. 
-
 // Note that a pastis server can support more than one API.
 // Pastis rich features are : 
 // Nice URL-pattern matching, 
