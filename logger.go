@@ -48,11 +48,11 @@ func LevelInt(level string) int {
 func GetLogger(level string) *Logger {
 	levelInt := LevelInt(level)
 	pastisLogger := &Logger{level: levelInt}
-	pastisLogger.info = nativeLogger(os.Stdout, "INFO", log.Ldate|log.Ltime|log.Lshortfile)
-	pastisLogger.debug = nativeLogger(os.Stdout, "DEBUG", log.Ldate|log.Ltime|log.Lshortfile)
-	pastisLogger.warn = nativeLogger(os.Stdout, "WARN", log.Ldate|log.Ltime|log.Lshortfile)
-	pastisLogger.err = nativeLogger(os.Stdout, "ERROR", log.Ldate|log.Ltime|log.Lshortfile)
-	pastisLogger.fatal = nativeLogger(os.Stdout, "FATAL", log.Ldate|log.Ltime|log.Lshortfile)
+	pastisLogger.info = nativeLogger(os.Stdout, "INFO", log.Ldate|log.Ltime)
+	pastisLogger.debug = nativeLogger(os.Stdout, "DEBUG", log.Ldate|log.Ltime)
+	pastisLogger.warn = nativeLogger(os.Stdout, "WARN", log.Ldate|log.Ltime)
+	pastisLogger.err = nativeLogger(os.Stdout, "ERROR", log.Ldate|log.Ltime)
+	pastisLogger.fatal = nativeLogger(os.Stdout, "FATAL", log.Ldate|log.Ltime)
 	return pastisLogger
 }
 

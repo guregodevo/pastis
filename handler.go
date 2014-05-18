@@ -274,9 +274,8 @@ func (api *API) Start(port int) error {
 
 	err := http.ListenAndServe(portString, api.mux)
 	if err != nil {
-		api.logger.Info(" could not start API")
+		api.logger.Errorf(" API could not start at port %d \n", port)
 		return err
 	}
-	api.logger.Infof(" API successfully started at port %d \n", port)
 	return nil
 }
