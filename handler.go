@@ -62,6 +62,7 @@ func ErrorResponse(err error) interface{} {
 //The second callback input parameter is the unmarshalled JSON body recieved from the request (if it exists).
 func (api *API) handleMethodCall(urlValues url.Values, request *http.Request, methodRef reflect.Value) (int, interface{}) {
 	api.logger.Debugf("handleMethodCall %s", request.Method)
+
 	if methodRef.Kind() == reflect.Invalid {
 		return http.StatusNotImplemented, nil
 	}
@@ -263,7 +264,7 @@ func (api *API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (api *API) HandleFunc() {
 	api.mux.HandleFunc("/", api.router.Handler(api.logger))
-	api.router.OpsFriendLog(api.logger)
+	api.router.OpsFriendlyLog(api.logger)
 }
 
 // Start causes the API to begin serving requests on the given port.

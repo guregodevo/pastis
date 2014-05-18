@@ -12,7 +12,7 @@ type Router struct {
 }
 
 //Prints out the routes in a friendly manner
-func (router *Router) OpsFriendLog(logger *Logger) {
+func (router *Router) OpsFriendlyLog(logger *Logger) {
 	fmt.Print("API Routes \n")
 	log := make(map[string][]string)
 
@@ -94,7 +94,15 @@ func (router *Router) Handler(logger *Logger) http.HandlerFunc {
 			rw.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		handlersForPattern := router.handlers[request.Method]
+
+		method := request.Method
+
+		if method == "OPTIONS" &&  request.Header.Get(HEADER_Access_Control_Request_Method) != "" {
+			method = request.Header.Get(HEADER_Access_Control_Request_Method)
+			logger.Debugf("CORS negotiation initiaded: Routing to the Access control method [%v] ", method) 
+		}	
+
+		handlersForPattern := router.handlers[method]
 
 		for pattern := range handlersForPattern {
 			ok, params := Match(Regexp(pattern), request.URL.Path)
@@ -106,8 +114,8 @@ func (router *Router) Handler(logger *Logger) http.HandlerFunc {
 				handlersForPattern[pattern](rw, request)
 				return
 			}
-		}
-		logger.Debugf("No handler found for [method=%s,url=%v] ", request.Method, request.URL.Path)
+		}	
+		logger.Debugf("No handler found for [method=%s,url=%v] ", method, request.URL.Path)
 		rw.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
