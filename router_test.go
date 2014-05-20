@@ -23,8 +23,15 @@ func Test_Pastis_RegexpMatch(t *testing.T) {
 }
 
 func Test_Pastis_ComplexRegexpMatch(t *testing.T) {
-	ok, params := Match(Regexp("^/dashboards/:dashboardid/chart/(?P<chartid>)$"), "/dashboards/1/chart/")
+	regexp := "^/dashboards/:dashboardid/chart/(?P<chartid>[0-9]*)$"
+	ok, params := Match(Regexp(regexp), "/dashboards/1/chart/2")
 	expect(t, ok, true)
-	//expect(t, params["chartid"], "2")
+	expect(t, params["chartid"], "2")
+	expect(t, params["dashboardid"], "1")
+
+	ok, params = Match(Regexp(regexp), "/dashboards/1/chart/")
+	expect(t, ok, true)
+	expect(t, params["chartid"], "")
 	expect(t, params["dashboardid"], "1")
 }
+
