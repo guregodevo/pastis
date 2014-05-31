@@ -45,6 +45,11 @@ func NewAPI() *API {
 	return &API{chain: &FilterChain{[]Filter{}, 0, nil}, mux: http.NewServeMux(), router: NewRouter(), logger: GetLogger("DEBUG")}
 }
 
+
+func (api *API)  SetLevel(level string) {
+	api.logger.SetLevel(level)
+}
+
 //SetOutput sets the output destination for the standard logger of the given level.
 //Example: api.SetOuput("ERROR", os.StdErr, log.Lmicroseconds)
 func (api *API) SetOuput(level string, w io.Writer, flag int) *Logger {
