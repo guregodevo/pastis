@@ -51,9 +51,9 @@ func (api *API)  SetLevel(level string) {
 }
 
 //SetOutput sets the output destination for the standard logger of the given level.
-//Example: api.SetOuput("ERROR", os.StdErr, log.Lmicroseconds)
-func (api *API) SetOuput(level string, w io.Writer, flag int) *Logger {
-	api.logger.SetOuput(level, w, flag)
+//Example: api.SetOutput("ERROR", os.StdErr, log.Lmicroseconds)
+func (api *API) SetOutput(level string, w io.Writer, flag int) *Logger {
+	api.logger.SetOutput(level, w, flag)
 	return api.logger
 }
 
