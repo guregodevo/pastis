@@ -66,15 +66,15 @@ func (logger *Logger) SetLevel(level string) {
 }
 
 //SetOutput sets the output destination for the logger having the given level.
-func (logger *Logger) SetOuputs(w io.Writer, flag int, levels ...string) {
+func (logger *Logger) SetOutputs(w io.Writer, flag int, levels ...string) {
 	for _, l := range levels {
-		logger.SetOuput(l, w, flag)
+		logger.SetOutput(l, w, flag)
 	}
 }
 
 
 //SetOutput sets the output destination for the logger having the given level.
-func (logger *Logger) SetOuput(level string, w io.Writer, flag int) {
+func (logger *Logger) SetOutput(level string, w io.Writer, flag int) {
 	levelNum := LevelInt(level)
 	switch {
 	case INFO == levelNum:
