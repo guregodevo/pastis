@@ -273,7 +273,7 @@ import "os"
 func main() {
 	api := pastis.NewAPI()
 	api.SetLevel("INFO")
-	api.SetOutput("ERROR", os.StdErr, log.Ltime)
+	api.SetOutput("ERROR", os.Stderr, log.Ltime)
 	//ERROR logs will now be printed out to the standard error stream
 	//Prefixed by ERROR and the time flag "ERROR 01:23:23" 
 }
