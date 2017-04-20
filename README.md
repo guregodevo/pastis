@@ -1,4 +1,4 @@
-#pastis [![GoDoc](https://godoc.org/github.com/guregodevo/pastis?status.png)](http://godoc.org/github.com/guregodevo/pastis)
+# pastis [![GoDoc](https://godoc.org/github.com/guregodevo/pastis?status.png)](http://godoc.org/github.com/guregodevo/pastis)
 
 
 Go framework for developing ops-friendly RESTful web services
@@ -8,7 +8,7 @@ Getting Started
 
 Pastis is a framework for creating RESTful web services with minimal effort: 
 
-##Quick Example
+## Quick Example
 
 ```go
 //main.go
@@ -46,7 +46,7 @@ After this command *pastis* is ready to use. Its source will be in:
 
 You can use `go get -u -a` to update all installed packages.
 
-##Routes
+## Routes
 
 In Pastis, a route is an HTTP method paired with a URL-matching pattern.
 Each route is associated with a callback function: 
@@ -113,7 +113,7 @@ Possible request body parameter can be any of the following types:
  * *[]interface{}*  for JSON arrays
  * Any Go primitive type that matches the body content that is more convenient that the type above (int, string etc..)
 
-##Return Values
+## Return Values
 
 Every callback execution should end up returning a tuple *(int, interface{})*. The tuple element of type int represents the HTTP status code. The other one of type *interface{}* represents the response content. The return handler will take care of marshalling this content into JSON.
 
@@ -125,7 +125,7 @@ Examples:
 	return http.StatusOK, "Hello"
 ```
 
-##Resources
+## Resources
 
 In Pastis, a resource is any Go *struct* that implements HTTP methods (GET, PUT etc..). 
 
@@ -170,7 +170,7 @@ In the above example, the chart resource *Put* method matches the HTTP method "P
 
 Resource method functions behave exactly like callback method except that they match the resource route.
 
-##Filters
+## Filters
 
 Filters are evaluated before and/or after request within the same context as the routes will be and can modify the request and response.
 
@@ -196,7 +196,7 @@ Any filter can be added to apis
 	api.AddFilter(pastis.LoggingFilter)
 ```
 
-##CORS Support
+## CORS Support
 
 Pastis provides [CORS](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing) filter. If you need it, just add the CORS filter to your api.
 
